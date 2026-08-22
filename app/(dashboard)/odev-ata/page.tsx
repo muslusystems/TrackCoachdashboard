@@ -12,6 +12,7 @@ type StudentOption = { id: string; name_surname: string; class_id: string | null
 export default function OdevAtaPage() {
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [students, setStudents] = useState<StudentOption[]>([]);
+  const [coachId, setCoachId] = useState("");
   const [loading, setLoading] = useState(true);
 
   const [file, setFile] = useState<File | null>(null);
@@ -30,12 +31,14 @@ export default function OdevAtaPage() {
 
   useEffect(() => {
     async function load() {
-      const [studentsRes, classesRes] = await Promise.all([
+      const [studentsRes, classesRes, meRes] = await Promise.all([
         fetch("/api/ogrenciler").then((r) => r.json()),
         fetch("/api/siniflar").then((r) => r.json()),
+        fetch("/api/me").then((r) => r.json()),
       ]);
       setStudents(studentsRes.students || []);
       setClasses(classesRes.classes || []);
+      setCoachId(meRes.coachId || "");
       setLoading(false);
     }
     load();
@@ -75,38 +78,66 @@ export default function OdevAtaPage() {
     }
 
     setSubmitting(true);
-    const formData = new FormData();
-    formData.set("data", file);
-    formData.set("title", title);
-    formData.set("description", description);
-    formData.set("assignmentType", "pdf");
-    formData.set("dueDate", dueDate);
-    formData.set("targetType", targetType);
-    formData.set("classId", targetType === "class" ? classId : "");
-    formData.set(
-      "studentIds",
-      targetType === "students" ? JSON.stringify(selectedStudents) : "[]"
-    );
+    try {
+      const webhookUrl = process.env.NEXT_PUBLIC_N8N_ODEV_ATA_WEBHOOK_URL;
+      const secret = process.env.NEXT_PUBLIC_TRACKCOACH_WEBHOOK_SECRET;
+      if (!webhookUrl || !secret || !coachId) {
+        throw new Error(
+          "Sunucu ayarları eksik (NEXT_PUBLIC_N8N_ODEV_ATA_WEBHOOK_URL / NEXT_PUBLIC_TRACKCOACH_WEBHOOK_SECRET) ya da oturum bilgisi alınamadı."
+        );
+      }
 
-    const res = await fetch("/api/odev-ata", { method: "POST", body: formData });
-    const data = await res.json();
-    setSubmitting(false);
+      const formData = new FormData();
+      formData.set("data", file);
+      formData.set("coachId", coachId);
+      formData.set("title", title);
+      formData.set("description", description);
+      formData.set("assignmentType", "pdf");
+      formData.set("dueDate", dueDate);
+      formData.set("targetType", targetType);
+      formData.set("classId", targetType === "class" ? classId : "");
+      formData.set(
+        "studentIds",
+        targetType === "students" ? JSON.stringify(selectedStudents) : "[]"
+      );
 
-    if (!res.ok || data.ok === false) {
-      setResult({ ok: false, message: data.error || "Bir şeyler ters gitti." });
-      return;
+      const res = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "x-trackcoach-secret": secret },
+        body: formData,
+      });
+
+      let data: { ok?: boolean; error?: string; assignedCount?: number } = {};
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error(
+          `Sunucudan geçersiz yanıt geldi (durum: ${res.status}).`
+        );
+      }
+
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error || "Bir şeyler ters gitti.");
+      }
+
+      setResult({
+        ok: true,
+        message: `Ödev ${data.assignedCount ?? ""} öğrenciye atandı.`,
+      });
+      setFile(null);
+      setTitle("");
+      setDescription("");
+      setDueDate("");
+      setSelectedStudents([]);
+      setClassId("");
+    } catch (err) {
+      setResult({
+        ok: false,
+        message: err instanceof Error ? err.message : "Bir şeyler ters gitti.",
+      });
+    } finally {
+      setSubmitting(false);
     }
-
-    setResult({
-      ok: true,
-      message: `Ödev ${data.assignedCount ?? ""} öğrenciye atandı.`,
-    });
-    setFile(null);
-    setTitle("");
-    setDescription("");
-    setDueDate("");
-    setSelectedStudents([]);
-    setClassId("");
   }
 
   return (
