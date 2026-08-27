@@ -19,6 +19,7 @@ export default function OdevAtaPage() {
   const [dragActive, setDragActive] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [answerKey, setAnswerKey] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [targetType, setTargetType] = useState<"class" | "students">("class");
   const [classId, setClassId] = useState("");
@@ -92,6 +93,7 @@ export default function OdevAtaPage() {
       formData.set("coachId", coachId);
       formData.set("title", title);
       formData.set("description", description);
+      formData.set("answerKey", answerKey);
       formData.set("assignmentType", "pdf");
       formData.set("dueDate", dueDate);
       formData.set("targetType", targetType);
@@ -127,6 +129,7 @@ export default function OdevAtaPage() {
       setFile(null);
       setTitle("");
       setDescription("");
+      setAnswerKey("");
       setDueDate("");
       setSelectedStudents([]);
       setClassId("");
@@ -226,6 +229,23 @@ export default function OdevAtaPage() {
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
             />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-ink-600">
+              Cevap anahtarı (opsiyonel — öğrenciye asla gösterilmez)
+            </label>
+            <textarea
+              value={answerKey}
+              onChange={(e) => setAnswerKey(e.target.value)}
+              placeholder="örn. 1-A, 2-C, 3-B, 4-D, 5-A ..."
+              rows={4}
+              className="flex w-full rounded-md border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-signal-400"
+            />
+            <p className="mt-1 text-xs text-ink-400">
+              Bunu girersen, öğrenci fotoğrafını gönderdiğinde yapay zeka
+              cevaplarını bu anahtarla karşılaştırıp doğru/yanlış sayısını
+              hesaplar. Bu metin öğrenciye hiçbir zaman gösterilmez.
+            </p>
           </div>
         </CardContent>
       </Card>
