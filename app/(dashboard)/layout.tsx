@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, GraduationCap, LogOut, FileUp } from "lucide-react";
+import { Users, GraduationCap, LogOut, FileUp, FileText } from "lucide-react";
 import { getSession } from "@/lib/session";
 
 const NAV_ITEMS = [
   { href: "/ogrenciler", label: "Öğrenciler", icon: Users },
   { href: "/siniflar", label: "Sınıflar", icon: GraduationCap },
   { href: "/odev-ata", label: "Ödev Ata", icon: FileUp },
+  { href: "/odevler", label: "Ödevler", icon: FileText },
 ];
 
 export default async function DashboardLayout({
