@@ -16,6 +16,7 @@ export default function OdevAtaPage() {
   const [loading, setLoading] = useState(true);
 
   const [file, setFile] = useState<File | null>(null);
+  const [answerFile, setAnswerFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
