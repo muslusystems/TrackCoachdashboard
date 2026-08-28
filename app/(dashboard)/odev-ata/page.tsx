@@ -16,7 +16,8 @@ export default function OdevAtaPage() {
   const [loading, setLoading] = useState(true);
 
   const [file, setFile] = useState<File | null>(null);
-  const [answerFile, setAnswerFile] = useState<File | null>(null);
+  // YENİ EKLENEN: Cevap dosyası için state
+  const [answerFile, setAnswerFile] = useState<File | null>(null); 
   const [dragActive, setDragActive] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -104,6 +105,11 @@ export default function OdevAtaPage() {
         targetType === "students" ? JSON.stringify(selectedStudents) : "[]"
       );
 
+      // YENİ EKLENEN: Cevap dosyası seçilmişse form verisine ekle
+      if (answerFile) {
+        formData.set("answerFile", answerFile);
+      }
+
       const res = await fetch(webhookUrl, {
         method: "POST",
         headers: { "x-trackcoach-secret": secret },
@@ -128,6 +134,7 @@ export default function OdevAtaPage() {
         message: `Ödev ${data.assignedCount ?? ""} öğrenciye atandı.`,
       });
       setFile(null);
+      setAnswerFile(null); // İşlem bitince dosya seçimini temizle
       setTitle("");
       setDescription("");
       setAnswerKey("");
@@ -248,6 +255,19 @@ export default function OdevAtaPage() {
               hesaplar. Bu metin öğrenciye hiçbir zaman gösterilmez.
             </p>
           </div>
+          
+          {/* YENİ EKLENEN: Arayüze eklenen dosya seçici alanı */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-ink-600">
+              Cevap Dosyası Yükle (PDF/Görsel - Opsiyonel)
+            </label>
+            <input
+              type="file"
+              onChange={(e) => setAnswerFile(e.target.files?.[0] || null)}
+              className="flex h-10 w-full rounded-md border border-ink-200 bg-white px-3 py-2 text-sm"
+            />
+          </div>
+
         </CardContent>
       </Card>
 
