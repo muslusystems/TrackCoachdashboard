@@ -258,15 +258,29 @@ export default function OdevAtaPage() {
           
           {/* YENİ EKLENEN: Arayüze eklenen dosya seçici alanı */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-ink-600">
-              Cevap Dosyası Yükle (PDF/Görsel - Opsiyonel)
-            </label>
-            <input
-              type="file"
-              onChange={(e) => setAnswerFile(e.target.files?.[0] || null)}
-              className="flex h-10 w-full rounded-md border border-ink-200 bg-white px-3 py-2 text-sm"
-            />
-          </div>
+  <label className="mb-1 block text-sm font-medium text-ink-600">
+    Cevap Dosyası Yükle (PDF/Görsel - Opsiyonel)
+  </label>
+  {answerFile ? (
+    <div className="flex h-10 w-full items-center justify-between rounded-md border border-ink-200 bg-ink-50 px-3 py-2 text-sm text-ink-900">
+      <span className="truncate">{answerFile.name}</span>
+      <button
+        type="button"
+        onClick={() => setAnswerFile(null)}
+        className="ml-2 flex items-center justify-center text-ink-400 hover:text-ink-800"
+        aria-label="Cevap dosyasını kaldır"
+      >
+        <X size={16} />
+      </button>
+    </div>
+  ) : (
+    <input
+      type="file"
+      onChange={(e) => setAnswerFile(e.target.files?.[0] || null)}
+      className="flex h-10 w-full rounded-md border border-ink-200 bg-white px-3 py-2 text-sm"
+    />
+  )}
+</div>
 
         </CardContent>
       </Card>
