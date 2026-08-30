@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -135,8 +136,8 @@ export default function OgrencilerPage() {
             <p className="text-sm text-ink-400">Yükleniyor…</p>
           ) : students.length === 0 ? (
             <p className="text-sm text-ink-400">
-              Henüz öğrencin yok. "Öğrenci ekle" ile başla, ya da admin bottan
-              davet linki gönder.
+              Henüz öğrencin yok. &quot;Öğrenci ekle&quot; ile başla, ya da admin
+              bottan davet linki gönder.
             </p>
           ) : (
             <table className="w-full text-sm">
@@ -149,8 +150,18 @@ export default function OgrencilerPage() {
               </thead>
               <tbody>
                 {students.map((s) => (
-                  <tr key={s.id} className="border-b border-ink-50 last:border-0">
-                    <td className="py-3 text-ink-900">{s.name_surname}</td>
+                  <tr
+                    key={s.id}
+                    className="border-b border-ink-50 last:border-0 hover:bg-ink-50"
+                  >
+                    <td className="py-3 text-ink-900">
+                      <Link
+                        href={`/ogrenciler/${s.id}`}
+                        className="hover:text-signal-600 hover:underline"
+                      >
+                        {s.name_surname}
+                      </Link>
+                    </td>
                     <td className="py-3 text-ink-600">
                       {s.classes?.class_name || "—"}
                     </td>
