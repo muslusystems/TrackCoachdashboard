@@ -37,7 +37,7 @@ export async function DELETE(
 
   const { error } = await supabaseAdmin
     .from("assignments")
-    .delete() // .update yerine doğrudan silme komutu eklendi
+    .update({ deleted_at: new Date().toISOString() })
     .eq("id", params.id)
     .eq("coach_id", session.coachId);
 
