@@ -49,6 +49,27 @@ export default function OgrencilerPage() {
     load();
   }, []);
 
+// 👇 SİLME FONKSİYONUNU BURAYA EKLİYORUZ 👇
+  const ogrenciSil = async (studentId: string) => {
+      const onay = window.confirm("⚠️ Bu öğrenciyi silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz ve öğrencinin tüm ödev geçmişi de silinir.");
+      
+      if (onay) {
+          // supabase objesini sayfanın en üst kısmında import ettiğinden emin ol
+          const { error } = await supabase
+              .from('students')
+              .delete()
+              .eq('id', studentId);
+
+          if (error) {
+              alert("Silme işlemi başarısız: " + error.message);
+          } else {
+              alert("Öğrenci başarıyla silindi.");
+              load(); // Sayfayı yenilemek yerine verileri arka planda tekrar çeker
+          }
+      }
+  };
+  // 👆 --------------------------------- 👆
+  
   async function handleAdd() {
     setFormError("");
     if (!name.trim()) {
@@ -170,6 +191,15 @@ export default function OgrencilerPage() {
                         {s.status === "active" ? "Aktif" : s.status}
                       </span>
                     </td>
+{/* YENİ EKLENEN BUTON KISMI */}
+                    <td className="py-3 text-right">
+                      <button 
+                        onClick={() => ogrenciSil(s.id)} 
+                        className="text-red-500 hover:text-red-700 font-medium text-xs transition-colors"
+                      >
+                        Sil
+                      </button>
+                    </td>                  
                   </tr>
                 ))}
               </tbody>
