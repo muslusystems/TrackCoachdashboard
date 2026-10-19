@@ -51,25 +51,26 @@ export default function OgrencilerPage() {
   }, []);
 
 // 👇 SİLME FONKSİYONUNU BURAYA EKLİYORUZ 👇
-  const ogrenciSil = async (studentId: string) => {
+ const ogrenciSil = async (studentId: string) => {
       const onay = window.confirm("⚠️ Bu öğrenciyi silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz ve öğrencinin tüm ödev geçmişi de silinir.");
       
       if (onay) {
-          // supabase objesini sayfanın en üst kısmında import ettiğinden emin ol
-          const { error } = await supabase
-              .from('students')
-              .delete()
-              .eq('id', studentId);
+          try {
+              const res = await fetch(`/api/ogrenciler/${studentId}`, {
+                  method: 'DELETE',
+              });
 
-          if (error) {
-              alert("Silme işlemi başarısız: " + error.message);
-          } else {
+              if (!res.ok) {
+                  throw new Error("Silme işlemi sunucu tarafından reddedildi.");
+              }
+
               alert("Öğrenci başarıyla silindi.");
-              load(); // Sayfayı yenilemek yerine verileri arka planda tekrar çeker
+              load(); // Verileri yeniden çekip listeyi günceller
+          } catch (error: any) {
+              alert("Hata oluştu: " + error.message);
           }
       }
   };
-  // 👆 --------------------------------- 👆
   
   async function handleAdd() {
     setFormError("");
