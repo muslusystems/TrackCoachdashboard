@@ -38,6 +38,28 @@ export default function SiniflarPage() {
     load();
   }, []);
 
+  // 👇 SINIF SİLME FONKSİYONU EKLENDİ 👇
+  const sinifSil = async (classId: string) => {
+    const onay = window.confirm("⚠️ Bu sınıfı silmek istediğinize emin misiniz?\n\nİçindeki öğrenciler silinmeyecek, sadece 'Sınıfsız' durumuna düşecektir.");
+    
+    if (onay) {
+        try {
+            const res = await fetch(`/api/siniflar/${classId}`, {
+                method: 'DELETE',
+            });
+
+            if (!res.ok) {
+                throw new Error("Silme işlemi sunucu tarafından reddedildi.");
+            }
+
+            alert("Sınıf başarıyla silindi.");
+            load(); // Sınıf kutularını günceller
+        } catch (error: any) {
+            alert("Hata oluştu: " + error.message);
+        }
+    }
+  };
+
   async function handleAdd() {
     setFormError("");
     if (!name.trim()) {
@@ -113,10 +135,17 @@ export default function SiniflarPage() {
               <CardHeader>
                 <CardTitle>{c.class_name}</CardTitle>
               </CardHeader>
-              <CardContent>
+              {/* 👇 BUTON BURAYA, ÖĞRENCİ SAYISININ YANINA EKLENDİ 👇 */}
+              <CardContent className="flex items-center justify-between">
                 <p className="text-sm text-ink-400">
                   {c.students?.[0]?.count ?? 0} öğrenci
                 </p>
+                <button 
+                  onClick={() => sinifSil(c.id)} 
+                  className="text-red-500 hover:text-red-700 font-medium text-xs transition-colors"
+                >
+                  Sil
+                </button>
               </CardContent>
             </Card>
           ))}
