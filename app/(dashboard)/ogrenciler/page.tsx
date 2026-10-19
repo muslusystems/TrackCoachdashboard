@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseAdmin";
 import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,8 +49,7 @@ export default function OgrencilerPage() {
     load();
   }, []);
 
-// 👇 SİLME FONKSİYONUNU BURAYA EKLİYORUZ 👇
- const ogrenciSil = async (studentId: string) => {
+  const ogrenciSil = async (studentId: string) => {
       const onay = window.confirm("⚠️ Bu öğrenciyi silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz ve öğrencinin tüm ödev geçmişi de silinir.");
       
       if (onay) {
@@ -169,6 +167,7 @@ export default function OgrencilerPage() {
                   <th className="pb-2 font-medium">Ad soyad</th>
                   <th className="pb-2 font-medium">Sınıf</th>
                   <th className="pb-2 font-medium">Durum</th>
+                  <th className="pb-2 font-medium text-right">İşlem</th>
                 </tr>
               </thead>
               <tbody>
@@ -193,7 +192,6 @@ export default function OgrencilerPage() {
                         {s.status === "active" ? "Aktif" : s.status}
                       </span>
                     </td>
-{/* YENİ EKLENEN BUTON KISMI */}
                     <td className="py-3 text-right">
                       <button 
                         onClick={() => ogrenciSil(s.id)} 
