@@ -294,7 +294,7 @@ export default function OdevAtaPage() {
                     ))}
                   </select>
                   <Button 
-                    variant="outline" 
+                    variant="secondary" 
                     size="icon" 
                     type="button"
                     onClick={() => setIsLessonOpen(true)}
@@ -346,7 +346,7 @@ export default function OdevAtaPage() {
                     ))}
                   </select>
                   <Button 
-                    variant="outline" 
+                    variant="secondary" 
                     size="icon" 
                     type="button"
                     disabled={!lessonId}
