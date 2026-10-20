@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { UploadCloud, FileText, X, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,6 @@ export default function OdevAtaPage() {
   const [classId, setClassId] = useState("");
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   
-  // Ders ve Konu State'leri
   const [lessonId, setLessonId] = useState("");
   const [topicId, setTopicId] = useState("");
   const [isLessonOpen, setIsLessonOpen] = useState(false);
@@ -50,28 +49,27 @@ export default function OdevAtaPage() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
-  async function loadData() {
-    try {
-      const [studentsRes, classesRes, meRes, derslerRes, konularRes] = await Promise.all([
-        fetch("/api/ogrenciler").then((r) => r.json()),
-        fetch("/api/siniflar").then((r) => r.json()),
-        fetch("/api/me").then((r) => r.json()),
-        fetch("/api/dersler").then((r) => r.json()).catch(() => ({ lessons: [] })),
-        fetch("/api/konular").then((r) => r.json()).catch(() => ({ topics: [] })),
-      ]);
-      setStudents(studentsRes.students || []);
-      setClasses(classesRes.classes || []);
-      setCoachId(meRes.coachId || "");
-      setLessons(derslerRes.lessons || []);
-      setTopics(konularRes.topics || []);
-    } catch (error) {
-      console.error("Veriler yüklenirken hata oluştu:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
+    async function loadData() {
+      try {
+        const [studentsRes, classesRes, meRes, derslerRes, konularRes] = await Promise.all([
+          fetch("/api/ogrenciler").then((r) => r.json()),
+          fetch("/api/siniflar").then((r) => r.json()),
+          fetch("/api/me").then((r) => r.json()),
+          fetch("/api/dersler").then((r) => r.json()).catch(() => ({ lessons: [] })),
+          fetch("/api/konular").then((r) => r.json()).catch(() => ({ topics: [] })),
+        ]);
+        setStudents(studentsRes.students || []);
+        setClasses(classesRes.classes || []);
+        setCoachId(meRes.coachId || "");
+        setLessons(derslerRes.lessons || []);
+        setTopics(konularRes.topics || []);
+      } catch (error) {
+        console.error("Veriler yüklenirken hata oluştu:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
     loadData();
   }, []);
 
@@ -100,8 +98,8 @@ export default function OdevAtaPage() {
     if (res.ok) {
       const data = await res.json();
       setLessons([...lessons, data.lesson]);
-      setLessonId(data.lesson.id); // Otomatik seç
-      setTopicId(""); // Ders değiştiği için konuyu sıfırla
+      setLessonId(data.lesson.id);
+      setTopicId("");
       setNewLessonName("");
       setIsLessonOpen(false);
     }
@@ -119,13 +117,12 @@ export default function OdevAtaPage() {
     if (res.ok) {
       const data = await res.json();
       setTopics([...topics, data.topic]);
-      setTopicId(data.topic.id); // Otomatik seç
+      setTopicId(data.topic.id);
       setNewTopicName("");
       setIsTopicOpen(false);
     }
   }
 
-  // Seçilen derse ait konuları filtrele
   const filteredTopics = topics.filter((t) => t.lesson_id === lessonId);
 
   async function handleSubmit() {
@@ -204,7 +201,6 @@ export default function OdevAtaPage() {
         message: `Ödev ${data.assignedCount ?? ""} öğrenciye atandı.`,
       });
       
-      // Formu temizle
       setFile(null);
       setAnswerFile(null);
       setTitle("");
@@ -281,9 +277,7 @@ export default function OdevAtaPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           
-          {/* YENİ EKLENEN: Ders ve Konu Seçimi */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* Ders Seçimi */}
             <div>
               <label className="mb-1 block text-sm font-medium text-ink-600">
                 Ders
@@ -293,7 +287,7 @@ export default function OdevAtaPage() {
                   value={lessonId}
                   onChange={(e) => {
                     setLessonId(e.target.value);
-                    setTopicId(""); // Ders değişince konuyu sıfırla
+                    setTopicId("");
                   }}
                   className="flex h-10 flex-1 rounded-md border border-ink-200 bg-white px-3 text-sm"
                 >
@@ -328,7 +322,6 @@ export default function OdevAtaPage() {
               </div>
             </div>
 
-            {/* Konu Seçimi */}
             <div>
               <label className="mb-1 block text-sm font-medium text-ink-600">
                 Konu
