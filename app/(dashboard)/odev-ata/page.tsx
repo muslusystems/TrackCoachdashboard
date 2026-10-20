@@ -295,10 +295,9 @@ export default function OdevAtaPage() {
                   </select>
                   <Button 
                     variant="secondary" 
-                    size="icon" 
                     type="button"
                     onClick={() => setIsLessonOpen(true)}
-                    className="h-10 w-10 shrink-0"
+                    className="h-10 w-10 shrink-0 p-0"
                   >
                     <Plus size={16} />
                   </Button>
@@ -316,10 +315,9 @@ export default function OdevAtaPage() {
                   </Button>
                   <Button 
                     variant="ghost" 
-                    size="icon" 
                     type="button"
                     onClick={() => setIsLessonOpen(false)}
-                    className="h-10 w-10 shrink-0 text-ink-400 hover:text-ink-800"
+                    className="h-10 w-10 shrink-0 p-0 text-ink-400 hover:text-ink-800"
                   >
                     <X size={16} />
                   </Button>
@@ -347,11 +345,10 @@ export default function OdevAtaPage() {
                   </select>
                   <Button 
                     variant="secondary" 
-                    size="icon" 
                     type="button"
                     disabled={!lessonId}
                     onClick={() => setIsTopicOpen(true)}
-                    className="h-10 w-10 shrink-0"
+                    className="h-10 w-10 shrink-0 p-0"
                   >
                     <Plus size={16} />
                   </Button>
@@ -369,10 +366,9 @@ export default function OdevAtaPage() {
                   </Button>
                   <Button 
                     variant="ghost" 
-                    size="icon" 
                     type="button"
                     onClick={() => setIsTopicOpen(false)}
-                    className="h-10 w-10 shrink-0 text-ink-400 hover:text-ink-800"
+                    className="h-10 w-10 shrink-0 p-0 text-ink-400 hover:text-ink-800"
                   >
                     <X size={16} />
                   </Button>
