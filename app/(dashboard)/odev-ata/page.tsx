@@ -5,13 +5,6 @@ import { UploadCloud, FileText, X, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 
 type ClassOption = { id: string; class_name: string };
 type StudentOption = { id: string; name_surname: string; class_id: string | null };
@@ -39,6 +32,8 @@ export default function OdevAtaPage() {
   
   const [lessonId, setLessonId] = useState("");
   const [topicId, setTopicId] = useState("");
+  
+  // Inline Ekleme State'leri
   const [isLessonOpen, setIsLessonOpen] = useState(false);
   const [isTopicOpen, setIsTopicOpen] = useState(false);
   const [newLessonName, setNewLessonName] = useState("");
@@ -278,90 +273,111 @@ export default function OdevAtaPage() {
         <CardContent className="space-y-4">
           
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Ders Seçimi veya Ekleme */}
             <div>
               <label className="mb-1 block text-sm font-medium text-ink-600">
                 Ders
               </label>
-              <div className="flex gap-2">
-                <select
-                  value={lessonId}
-                  onChange={(e) => {
-                    setLessonId(e.target.value);
-                    setTopicId("");
-                  }}
-                  className="flex h-10 flex-1 rounded-md border border-ink-200 bg-white px-3 text-sm"
-                >
-                  <option value="">Ders seç…</option>
-                  {lessons.map((l) => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
-                  ))}
-                </select>
-                
-                <Dialog open={isLessonOpen} onOpenChange={setIsLessonOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
-                      <Plus size={16} />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Yeni Ders Ekle</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-3">
-                      <Input
-                        value={newLessonName}
-                        onChange={(e) => setNewLessonName(e.target.value)}
-                        placeholder="örn. Matematik"
-                      />
-                      <Button onClick={handleAddLesson} disabled={savingLesson} className="w-full">
-                        {savingLesson ? "Ekleniyor..." : "Ekle"}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
+              {!isLessonOpen ? (
+                <div className="flex gap-2">
+                  <select
+                    value={lessonId}
+                    onChange={(e) => {
+                      setLessonId(e.target.value);
+                      setTopicId("");
+                    }}
+                    className="flex h-10 flex-1 rounded-md border border-ink-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-signal-400"
+                  >
+                    <option value="">Ders seç…</option>
+                    {lessons.map((l) => (
+                      <option key={l.id} value={l.id}>{l.name}</option>
+                    ))}
+                  </select>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    type="button"
+                    onClick={() => setIsLessonOpen(true)}
+                    className="h-10 w-10 shrink-0"
+                  >
+                    <Plus size={16} />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    value={newLessonName}
+                    onChange={(e) => setNewLessonName(e.target.value)}
+                    placeholder="örn. Matematik"
+                    className="h-10"
+                  />
+                  <Button type="button" onClick={handleAddLesson} disabled={savingLesson} className="h-10">
+                    {savingLesson ? "..." : "Ekle"}
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    type="button"
+                    onClick={() => setIsLessonOpen(false)}
+                    className="h-10 w-10 shrink-0 text-ink-400 hover:text-ink-800"
+                  >
+                    <X size={16} />
+                  </Button>
+                </div>
+              )}
             </div>
 
+            {/* Konu Seçimi veya Ekleme */}
             <div>
               <label className="mb-1 block text-sm font-medium text-ink-600">
                 Konu
               </label>
-              <div className="flex gap-2">
-                <select
-                  value={topicId}
-                  onChange={(e) => setTopicId(e.target.value)}
-                  disabled={!lessonId}
-                  className="flex h-10 flex-1 rounded-md border border-ink-200 bg-white px-3 text-sm disabled:bg-ink-50 disabled:text-ink-400"
-                >
-                  <option value="">Konu seç…</option>
-                  {filteredTopics.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
-                
-                <Dialog open={isTopicOpen} onOpenChange={setIsTopicOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" disabled={!lessonId}>
-                      <Plus size={16} />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Yeni Konu Ekle</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-3">
-                      <Input
-                        value={newTopicName}
-                        onChange={(e) => setNewTopicName(e.target.value)}
-                        placeholder="örn. Türev"
-                      />
-                      <Button onClick={handleAddTopic} disabled={savingTopic} className="w-full">
-                        {savingTopic ? "Ekleniyor..." : "Ekle"}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
+              {!isTopicOpen ? (
+                <div className="flex gap-2">
+                  <select
+                    value={topicId}
+                    onChange={(e) => setTopicId(e.target.value)}
+                    disabled={!lessonId}
+                    className="flex h-10 flex-1 rounded-md border border-ink-200 bg-white px-3 text-sm disabled:bg-ink-50 disabled:text-ink-400 focus:outline-none focus:ring-2 focus:ring-signal-400"
+                  >
+                    <option value="">Konu seç…</option>
+                    {filteredTopics.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    type="button"
+                    disabled={!lessonId}
+                    onClick={() => setIsTopicOpen(true)}
+                    className="h-10 w-10 shrink-0"
+                  >
+                    <Plus size={16} />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    value={newTopicName}
+                    onChange={(e) => setNewTopicName(e.target.value)}
+                    placeholder="örn. Türev"
+                    className="h-10"
+                  />
+                  <Button type="button" onClick={handleAddTopic} disabled={savingTopic} className="h-10">
+                    {savingTopic ? "..." : "Ekle"}
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    type="button"
+                    onClick={() => setIsTopicOpen(false)}
+                    className="h-10 w-10 shrink-0 text-ink-400 hover:text-ink-800"
+                  >
+                    <X size={16} />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -470,7 +486,7 @@ export default function OdevAtaPage() {
             <select
               value={classId}
               onChange={(e) => setClassId(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-ink-200 bg-white px-3 text-sm"
+              className="flex h-10 w-full rounded-md border border-ink-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-signal-400"
             >
               <option value="">Sınıf seç…</option>
               {classes.map((c) => (
