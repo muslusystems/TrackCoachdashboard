@@ -15,6 +15,8 @@ export async function PATCH(
   if (typeof body.description === "string") update.description = body.description;
   if (typeof body.answer_key === "string") update.answer_key = body.answer_key || null;
   if (typeof body.due_date === "string") update.due_date = body.due_date || null;
+  if (typeof body.lesson_id === "string") update.lesson_id = body.lesson_id || null;
+  if (typeof body.topic_id === "string") update.topic_id = body.topic_id || null;
 
   const { data, error } = await supabaseAdmin
     .from("assignments")
