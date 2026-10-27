@@ -28,7 +28,7 @@ export async function GET(
 
   const { data: submissionsRaw, error: submissionsError } = await supabaseAdmin
     .from("submissions")
-    .select("id, drive_photo_url, gemini_analysis, created_at, assignments(title)")
+    .select("id, assignment_id, drive_photo_url, gemini_analysis, score_data, created_at, assignments(title)")
     .eq("student_id", params.id)
     .order("created_at", { ascending: false });
 
