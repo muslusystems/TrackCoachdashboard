@@ -15,6 +15,8 @@ type AssignedItem = {
 
 type SubmissionItem = {
   id: string;
+  assignment_id: string | null;
+  score_data: { correct_count?: number; wrong_count?: number } | null;
   drive_photo_url: string | null;
   gemini_analysis: string | null;
   created_at: string;
@@ -81,7 +83,10 @@ export default function OgrenciDetayPage() {
             data.assignedAssignments.map((a) => {
               // 1. Bu ödeve ait TÜM cevapları filtrele (Eşleştirmeyi ödev başlığından yapıyoruz)
               const odevCevaplari = data.submissions.filter(
-                (s) => s.assignments?.title === a.assignments?.title
+                (s) =>
+                  s.assignment_id && a.assignments?.id
+                    ? s.assignment_id === a.assignments.id
+                    : s.assignments?.title === a.assignments?.title
               );
 
               // 2. Mükerrer cevapları önlemek için listeyi tarihe göre sırala ve EN SON (en güncel) olanı al
@@ -145,7 +150,7 @@ export default function OgrenciDetayPage() {
                           <span className="text-[10px] text-ink-400">
                             Teslim: {new Date(cevap.created_at).toLocaleString("tr-TR")}
                           </span>
-                          {cevap.drive_photo_url && (
+                          {cevap.drive_photo_url && cevap.drive_photo_url.startsWith("http") && (
                             <a
                               href={cevap.drive_photo_url}
                               target="_blank"
@@ -157,6 +162,16 @@ export default function OgrenciDetayPage() {
                           )}
                         </div>
                       </div>
+                      {(cevap.score_data || analiz) && (
+                        <div className="mb-2 flex gap-2 text-xs font-semibold">
+                          <span className="rounded-full bg-progress-100 px-2.5 py-1 text-progress-700">
+                            ✅ Doğru: {cevap.score_data?.correct_count ?? analiz?.correct_count ?? 0}
+                          </span>
+                          <span className="rounded-full bg-pending-100 px-2.5 py-1 text-pending-700">
+                            ❌ Yanlış: {cevap.score_data?.wrong_count ?? analiz?.wrong_count ?? 0}
+                          </span>
+                        </div>
+                      )}
                       <p className="text-ink-700 text-sm whitespace-pre-wrap leading-relaxed">
                         {analiz ? analiz.comment : cevap.gemini_analysis}
                       </p>
