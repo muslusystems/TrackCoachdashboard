@@ -3,6 +3,7 @@ import { LogOut } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { SidebarNav } from "@/components/SidebarNav";
 import { avatarStyle, initials } from "@/lib/utils";
+import { computeAlerts } from "@/lib/alerts";
 
 export default async function DashboardLayout({
   children,
@@ -11,6 +12,14 @@ export default async function DashboardLayout({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
+
+  let alertCount = 0;
+  try {
+    const alerts = await computeAlerts(session.coachId);
+    alertCount = alerts.filter((a) => a.level === "red").length;
+  } catch {
+    alertCount = 0;
+  }
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
@@ -26,7 +35,7 @@ export default async function DashboardLayout({
             <p className="text-xs text-signal-200">Koç paneli</p>
           </div>
         </div>
-        <SidebarNav />
+        <SidebarNav alertCount={alertCount} />
         <div className="mt-5 flex items-center gap-3 rounded-xl bg-white/[0.08] p-3 md:mt-6">
           <span
             className={

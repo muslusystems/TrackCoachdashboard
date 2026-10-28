@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, GraduationCap, FileUp, FileText } from "lucide-react";
+import { Users, GraduationCap, FileUp, FileText, BellRing } from "lucide-react";
 
 const NAV_ITEMS = [
+  { href: "/uyarilar", label: "Dikkat Panosu", icon: BellRing },
   { href: "/ogrenciler", label: "Öğrenciler", icon: Users },
   { href: "/siniflar", label: "Sınıflar", icon: GraduationCap },
   { href: "/odev-ata", label: "Ödev Ata", icon: FileUp },
   { href: "/odevler", label: "Ödevler", icon: FileText },
 ];
 
-export function SidebarNav() {
+export function SidebarNav({ alertCount = 0 }: { alertCount?: number }) {
   const pathname = usePathname();
   return (
     <nav className="flex flex-1 flex-col gap-1">
@@ -37,7 +38,15 @@ export function SidebarNav() {
             >
               <item.icon size={17} />
             </span>
-            {item.label}
+            <span className="flex-1">{item.label}</span>
+            {item.href === "/uyarilar" && alertCount > 0 && (
+              <span
+                className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white"
+                aria-label={`${alertCount} öğrenci ilgi bekliyor`}
+              >
+                {alertCount}
+              </span>
+            )}
           </Link>
         );
       })}
