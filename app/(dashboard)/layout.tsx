@@ -1,14 +1,8 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Users, GraduationCap, LogOut, FileUp, FileText } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { getSession } from "@/lib/session";
-
-const NAV_ITEMS = [
-  { href: "/ogrenciler", label: "Öğrenciler", icon: Users },
-  { href: "/siniflar", label: "Sınıflar", icon: GraduationCap },
-  { href: "/odev-ata", label: "Ödev Ata", icon: FileUp },
-  { href: "/odevler", label: "Ödevler", icon: FileText },
-];
+import { SidebarNav } from "@/components/SidebarNav";
+import { avatarStyle, initials } from "@/lib/utils";
 
 export default async function DashboardLayout({
   children,
@@ -19,37 +13,45 @@ export default async function DashboardLayout({
   if (!session) redirect("/login");
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-60 flex-col border-r border-ink-100 bg-white px-4 py-6">
-        <div className="mb-8 px-2">
-          <p className="font-display text-lg font-semibold text-ink-900">
-            TrackCoach
-          </p>
-          <p className="text-xs text-ink-400">{session.name}</p>
+    <div className="flex min-h-screen flex-col md:flex-row">
+      <aside className="flex w-full shrink-0 flex-col bg-gradient-to-b from-night-900 via-night-800 to-night-700 px-4 py-5 md:sticky md:top-0 md:h-screen md:w-64 md:py-7">
+        <div className="mb-5 flex items-center gap-3 px-2 md:mb-9">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-signal-300 to-signal-600 font-display text-lg font-semibold text-white shadow-card">
+            T
+          </span>
+          <div>
+            <p className="font-display text-lg font-semibold leading-tight text-white">
+              TrackCoach
+            </p>
+            <p className="text-xs text-signal-200">Koç paneli</p>
+          </div>
         </div>
-        <nav className="flex flex-1 flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-600 hover:bg-ink-50 hover:text-ink-900"
-            >
-              <item.icon size={18} />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <form action="/api/auth/logout" method="post">
-          <button
-            type="submit"
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-400 hover:bg-ink-50 hover:text-ink-900"
+        <SidebarNav />
+        <div className="mt-5 flex items-center gap-3 rounded-xl bg-white/[0.08] p-3 md:mt-6">
+          <span
+            className={
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold " +
+              avatarStyle(session.name || "Koç")
+            }
           >
-            <LogOut size={18} />
-            Çıkış yap
-          </button>
-        </form>
+            {initials(session.name || "Koç")}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-white">{session.name}</p>
+            <form action="/api/auth/logout" method="post">
+              <button
+                type="submit"
+                className="flex items-center gap-1 text-xs text-signal-200 hover:text-white"
+              >
+                <LogOut size={12} /> Çıkış yap
+              </button>
+            </form>
+          </div>
+        </div>
       </aside>
-      <main className="flex-1 bg-ink-50 px-8 py-8">{children}</main>
+      <main className="min-w-0 flex-1 px-4 py-6 md:px-10 md:py-9">
+        <div className="mx-auto max-w-6xl">{children}</div>
+      </main>
     </div>
   );
 }

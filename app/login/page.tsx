@@ -59,8 +59,9 @@ export default function LoginPage() {
     : null;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-ink-50 px-4">
-      <div className="w-full max-w-sm rounded-card border border-ink-100 bg-white p-8 text-center shadow-sm">
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-night-900 via-night-800 to-signal-800 px-4">
+      <div className="w-full max-w-sm rounded-card bg-white p-8 text-center shadow-pop">
+        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-signal-400 to-signal-700 font-display text-xl font-semibold text-white shadow-card">T</span>
         <h1 className="font-display text-2xl font-semibold text-ink-900">
           TrackCoach
         </h1>
@@ -71,7 +72,7 @@ export default function LoginPage() {
         {state === "idle" && (
           <button
             onClick={startLogin}
-            className="mt-6 w-full rounded-md bg-signal-600 px-4 py-3 text-sm font-medium text-white hover:bg-signal-800"
+            className="mt-6 w-full rounded-xl bg-gradient-to-b from-signal-500 to-signal-700 px-4 py-3 text-sm font-medium text-white shadow-card hover:from-signal-600 hover:to-signal-800"
           >
             Telegram ile Giriş Yap
           </button>
@@ -84,7 +85,7 @@ export default function LoginPage() {
             </p>
             <a
               href={deepLink}
-              className="block w-full rounded-md bg-signal-600 px-4 py-3 text-sm font-medium text-white hover:bg-signal-800"
+              className="block w-full rounded-xl bg-gradient-to-b from-signal-500 to-signal-700 px-4 py-3 text-sm font-medium text-white shadow-card hover:from-signal-600 hover:to-signal-800"
             >
               Telegram&apos;ı Aç
             </a>
@@ -116,7 +117,7 @@ export default function LoginPage() {
             </p>
             <button
               onClick={startLogin}
-              className="mt-4 w-full rounded-md bg-signal-600 px-4 py-3 text-sm font-medium text-white hover:bg-signal-800"
+              className="mt-4 w-full rounded-xl bg-gradient-to-b from-signal-500 to-signal-700 px-4 py-3 text-sm font-medium text-white shadow-card hover:from-signal-600 hover:to-signal-800"
             >
               Tekrar dene
             </button>

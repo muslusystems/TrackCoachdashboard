@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { avatarStyle, initials } from "@/lib/utils";
 
 type AssignedItem = {
   id: string;
@@ -59,16 +60,35 @@ export default function OgrenciDetayPage() {
         <ArrowLeft size={14} /> Öğrencilere dön
       </Link>
 
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-semibold text-ink-900">
-          {data.student.name_surname}
-        </h1>
-        <p className="text-sm text-ink-400">
-          {data.student.classes?.class_name || "Sınıfsız"} ·{" "}
-          <span className="text-progress-700">
-            {data.student.status === "active" ? "Aktif" : data.student.status}
-          </span>
-        </p>
+      <div className="mb-8 flex flex-wrap items-center gap-5 rounded-card bg-gradient-to-r from-night-900 via-night-800 to-signal-800 p-6 shadow-card">
+        <span
+          className={
+            "flex h-16 w-16 items-center justify-center rounded-2xl text-xl font-semibold " +
+            avatarStyle(data.student.name_surname)
+          }
+        >
+          {initials(data.student.name_surname)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-2xl font-semibold text-white">
+            {data.student.name_surname}
+          </h1>
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-signal-200">
+            <span>{data.student.classes?.class_name || "Sınıfsız"}</span>
+            <span className="rounded-full bg-white/[0.12] px-2.5 py-0.5 text-xs font-medium text-white">
+              {data.student.status === "active" ? "Aktif" : data.student.status}
+            </span>
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <div className="rounded-xl bg-white/[0.1] px-4 py-2 text-center">
+            <p className="font-display text-xl font-semibold text-white">
+              {data.assignedAssignments.filter((x) => x.status !== "pending").length}
+              <span className="text-signal-300">/{data.assignedAssignments.length}</span>
+            </p>
+            <p className="text-xs text-signal-200">teslim edilen ödev</p>
+          </div>
+        </div>
       </div>
 
       {/* Yenilenmiş Tekli ve Birleşik Ödev Listesi */}
@@ -108,7 +128,7 @@ export default function OgrenciDetayPage() {
               return (
                 <div
                   key={a.id}
-                  className="rounded-md border border-ink-100 p-4 text-sm shadow-sm"
+                  className="rounded-xl border border-ink-100 bg-white p-4 text-sm shadow-card"
                 >
                   {/* Ödev Başlığı ve Durumu */}
                   <div className="flex items-center justify-between border-b border-ink-50 pb-3 mb-3 gap-2">
