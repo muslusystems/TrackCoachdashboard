@@ -56,6 +56,10 @@ export default function OdevlerPage() {
   const [lessonFolder, setLessonFolder] = useState<string | null>(null);
   const [topicFolder, setTopicFolder] = useState<string | null>(null);
   const [openStudents, setOpenStudents] = useState<Record<string, boolean>>({});
+  const [renameTarget, setRenameTarget] = useState<{ kind: "lesson" | "topic"; id: string } | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [renameSaving, setRenameSaving] = useState(false);
+  const [renameError, setRenameError] = useState("");
   const [editLessonId, setEditLessonId] = useState("");
   const [editTopicId, setEditTopicId] = useState("");
 
@@ -131,12 +135,68 @@ export default function OdevlerPage() {
     }
   }
 
-  function folderCard(key: string, name: string, count: number, onClick: () => void) {
+  function openRename(kind: "lesson" | "topic", id: string, name: string) {
+    setRenameTarget({ kind, id });
+    setRenameValue(name);
+    setRenameError("");
+  }
+
+  async function submitRename() {
+    if (!renameTarget) return;
+    if (!renameValue.trim()) {
+      setRenameError("Ad boş olamaz.");
+      return;
+    }
+    setRenameSaving(true);
+    const url = (renameTarget.kind === "lesson" ? "/api/dersler/" : "/api/konular/") + renameTarget.id;
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: renameValue }),
+    });
+    setRenameSaving(false);
+    if (!res.ok) {
+      setRenameError("Kaydedilemedi, tekrar dene.");
+      return;
+    }
+    setRenameTarget(null);
+    load();
+  }
+
+  async function deleteFolder(kind: "lesson" | "topic", id: string, name: string, count: number) {
+    const what = kind === "lesson" ? "dersi" : "konuyu";
+    const detail =
+      kind === "lesson"
+        ? "Dersin konuları silinir. İçindeki ödevler silinmez, \"Derssiz\" klasörüne taşınır."
+        : "İçindeki ödevler silinmez, \"Konusuz\" klasörüne taşınır.";
+    if (!window.confirm(`"${name}" ${what} silmek istediğine emin misin?\n\n${count} ödev etkilenecek. ${detail}`)) return;
+    const url = (kind === "lesson" ? "/api/dersler/" : "/api/konular/") + id;
+    const res = await fetch(url, { method: "DELETE" });
+    if (!res.ok) {
+      window.alert("Silinemedi, tekrar dene.");
+      return;
+    }
+    if (kind === "lesson") {
+      setLessonFolder(null);
+      setTopicFolder(null);
+    } else {
+      setTopicFolder(null);
+    }
+    load();
+  }
+
+  function folderCard(
+    key: string,
+    name: string,
+    count: number,
+    onClick: () => void,
+    manage?: { onRename: () => void; onDelete: () => void }
+  ) {
     return (
+      <div key={key} className="group relative">
       <button
-        key={key}
         onClick={onClick}
-        className="group flex items-center gap-3 rounded-card border border-ink-100 bg-white p-4 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-signal-200"
+        className="group flex w-full items-center gap-3 rounded-card border border-ink-100 bg-white p-4 pr-24 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-signal-200"
       >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-signal-50 text-signal-600 transition-colors group-hover:bg-signal-100">
           <Folder size={22} />
@@ -145,8 +205,30 @@ export default function OdevlerPage() {
           <p className="truncate font-medium text-ink-900">{name}</p>
           <p className="text-xs text-ink-400">{count} ödev</p>
         </div>
-        <ChevronRight size={16} className="text-ink-400" />
       </button>
+      {manage ? (
+        <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1">
+          <button
+            onClick={manage.onRename}
+            aria-label={`${name} adını değiştir`}
+            title="Adını değiştir"
+            className="rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-signal-50 hover:text-signal-600"
+          >
+            <Pencil size={15} />
+          </button>
+          <button
+            onClick={manage.onDelete}
+            aria-label={`${name} sil`}
+            title="Sil"
+            className="rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-red-50 hover:text-red-600"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      ) : (
+        <ChevronRight size={16} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ink-400" />
+      )}
+      </div>
     );
   }
 
@@ -294,10 +376,20 @@ export default function OdevlerPage() {
           {lessonFolder === null && (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {lessons.map((l) =>
-                folderCard(l.id, l.name, assignments.filter((a) => lessonOf(a) === l.id).length, () => {
-                  setLessonFolder(l.id);
-                  setTopicFolder(null);
-                })
+                folderCard(
+                  l.id,
+                  l.name,
+                  assignments.filter((a) => lessonOf(a) === l.id).length,
+                  () => {
+                    setLessonFolder(l.id);
+                    setTopicFolder(null);
+                  },
+                  {
+                    onRename: () => openRename("lesson", l.id, l.name),
+                    onDelete: () =>
+                      deleteFolder("lesson", l.id, l.name, assignments.filter((a) => lessonOf(a) === l.id).length),
+                  }
+                )
               )}
               {assignments.some((a) => lessonOf(a) === NONE) &&
                 folderCard(NONE, "Derssiz", assignments.filter((a) => lessonOf(a) === NONE).length, () => {
@@ -315,7 +407,17 @@ export default function OdevlerPage() {
                     t.id,
                     t.name,
                     assignments.filter((a) => lessonOf(a) === lessonFolder && topicOf(a) === t.id).length,
-                    () => setTopicFolder(t.id)
+                    () => setTopicFolder(t.id),
+                    {
+                      onRename: () => openRename("topic", t.id, t.name),
+                      onDelete: () =>
+                        deleteFolder(
+                          "topic",
+                          t.id,
+                          t.name,
+                          assignments.filter((a) => lessonOf(a) === lessonFolder && topicOf(a) === t.id).length
+                        ),
+                    }
                   )
                 )}
               {assignments.some((a) => lessonOf(a) === lessonFolder && topicOf(a) === NONE) &&
@@ -336,6 +438,29 @@ export default function OdevlerPage() {
           )}
         </>
       )}
+
+      <Dialog open={!!renameTarget} onOpenChange={(open) => !open && setRenameTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {renameTarget?.kind === "lesson" ? "Dersin adını değiştir" : "Konunun adını değiştir"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitRename()}
+              maxLength={60}
+              autoFocus
+            />
+            {renameError && <p className="text-sm text-pending-700">{renameError}</p>}
+            <Button onClick={submitRename} disabled={renameSaving} className="w-full">
+              {renameSaving ? "Kaydediliyor…" : "Kaydet"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent>
