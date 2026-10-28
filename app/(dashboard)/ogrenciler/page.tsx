@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Users } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
+import { avatarStyle, initials } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,10 +97,11 @@ export default function OgrencilerPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-semibold text-ink-900">
-          Öğrenciler
-        </h1>
+      <PageHeader
+        icon={Users}
+        title="Öğrenciler"
+        description="Kayıtlı öğrencilerini ve ödev geçmişlerini buradan takip et."
+        action={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -146,7 +149,8 @@ export default function OgrencilerPage() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -163,7 +167,7 @@ export default function OgrencilerPage() {
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-ink-100 text-left text-ink-400">
+                <tr className="border-b border-ink-100 text-left text-xs text-ink-400">
                   <th className="pb-2 font-medium">Ad soyad</th>
                   <th className="pb-2 font-medium">Sınıf</th>
                   <th className="pb-2 font-medium">Durum</th>
@@ -174,13 +178,21 @@ export default function OgrencilerPage() {
                 {students.map((s) => (
                   <tr
                     key={s.id}
-                    className="border-b border-ink-50 last:border-0 hover:bg-ink-50"
+                    className="border-b border-ink-50 transition-colors last:border-0 hover:bg-signal-50/60"
                   >
                     <td className="py-3 text-ink-900">
                       <Link
                         href={`/ogrenciler/${s.id}`}
-                        className="hover:text-signal-600 hover:underline"
+                        className="flex items-center gap-3 font-medium hover:text-signal-600"
                       >
+                        <span
+                          className={
+                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold " +
+                            avatarStyle(s.name_surname)
+                          }
+                        >
+                          {initials(s.name_surname)}
+                        </span>
                         {s.name_surname}
                       </Link>
                     </td>
@@ -188,14 +200,14 @@ export default function OgrencilerPage() {
                       {s.classes?.class_name || "—"}
                     </td>
                     <td className="py-3">
-                      <span className="rounded-full bg-progress-100 px-2 py-0.5 text-xs font-medium text-progress-700">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-progress-100 px-2.5 py-1 text-xs font-medium text-progress-700"><span className="h-1.5 w-1.5 rounded-full bg-progress-500" />
                         {s.status === "active" ? "Aktif" : s.status}
                       </span>
                     </td>
                     <td className="py-3 text-right">
                       <button 
                         onClick={() => ogrenciSil(s.id)} 
-                        className="text-red-500 hover:text-red-700 font-medium text-xs transition-colors"
+                        className="rounded-lg px-2.5 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-700"
                       >
                         Sil
                       </button>

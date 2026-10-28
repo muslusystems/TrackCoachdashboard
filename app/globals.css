@@ -3,10 +3,22 @@
 @tailwind utilities;
 
 body {
-  background-color: #F4F6F5;
+  background-color: #F5F6FB;
   color: #121815;
 }
 
 ::selection {
   background-color: #D6DCFA;
+}
+
+:focus-visible {
+  outline: 2px solid #5D6EE8;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

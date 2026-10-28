@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { UploadCloud, FileText, X, Plus } from "lucide-react";
+import { UploadCloud, FileText, X, Plus, FileUp } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -216,9 +217,11 @@ export default function OdevAtaPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-6 font-display text-2xl font-semibold text-ink-900">
-        Ödev Ata
-      </h1>
+      <PageHeader
+        icon={FileUp}
+        title="Ödev Ata"
+        description="Dosyayı yükle, ders ve konuyu seç, öğrencilere Telegram'dan ulaştır."
+      />
 
       <Card>
         <CardHeader>

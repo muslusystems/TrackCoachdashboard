@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Pencil, Trash2, ExternalLink, KeyRound, Folder, ChevronRight, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, ExternalLink, KeyRound, Folder, ChevronRight, ChevronDown, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -135,9 +136,11 @@ export default function OdevlerPage() {
       <button
         key={key}
         onClick={onClick}
-        className="flex items-center gap-3 rounded-card border border-ink-100 bg-white p-4 text-left shadow-sm transition-colors hover:bg-ink-50"
+        className="group flex items-center gap-3 rounded-card border border-ink-100 bg-white p-4 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-signal-200"
       >
-        <Folder size={22} className="shrink-0 text-signal-600" />
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-signal-50 text-signal-600 transition-colors group-hover:bg-signal-100">
+          <Folder size={22} />
+        </span>
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium text-ink-900">{name}</p>
           <p className="text-xs text-ink-400">{count} ödev</p>
@@ -271,9 +274,11 @@ export default function OdevlerPage() {
 
   return (
     <div>
-      <h1 className="mb-6 font-display text-2xl font-semibold text-ink-900">
-        Ödevler
-      </h1>
+      <PageHeader
+        icon={FileText}
+        title="Ödevler"
+        description="Ödevleri ders ve konulara göre klasörlerde gör, kimin teslim ettiğini takip et."
+      />
 
       {loading ? (
         <p className="text-sm text-ink-400">Yükleniyor…</p>

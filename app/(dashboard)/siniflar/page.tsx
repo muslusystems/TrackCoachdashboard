@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, GraduationCap, Users } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,10 +85,11 @@ export default function SiniflarPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-semibold text-ink-900">
-          Sınıflar
-        </h1>
+      <PageHeader
+        icon={GraduationCap}
+        title="Sınıflar"
+        description="Öğrencilerini sınıflara ayır, ödevi tüm sınıfa tek seferde ata."
+        action={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -118,7 +120,8 @@ export default function SiniflarPage() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+        }
+      />
 
       {loading ? (
         <p className="text-sm text-ink-400">Yükleniyor…</p>
@@ -135,14 +138,16 @@ export default function SiniflarPage() {
               <CardHeader>
                 <CardTitle>{c.class_name}</CardTitle>
               </CardHeader>
-              {/* 👇 BUTON BURAYA, ÖĞRENCİ SAYISININ YANINA EKLENDİ 👇 */}
               <CardContent className="flex items-center justify-between">
-                <p className="text-sm text-ink-400">
+                <p className="flex items-center gap-2 text-sm text-ink-600">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-signal-50 text-signal-600">
+                    <Users size={15} />
+                  </span>
                   {c.students?.[0]?.count ?? 0} öğrenci
                 </p>
                 <button 
                   onClick={() => sinifSil(c.id)} 
-                  className="text-red-500 hover:text-red-700 font-medium text-xs transition-colors"
+                  className="rounded-lg px-2.5 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-700"
                 >
                   Sil
                 </button>
