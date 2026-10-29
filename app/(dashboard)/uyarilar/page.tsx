@@ -205,7 +205,8 @@ export default function UyarilarPage() {
       <p className="mt-6 text-xs text-ink-400">
         Acil: 2+ ödevin süresi geçmiş, 14+ gündür teslim yok ya da son 3 teslimde başarı %50'nin altı.
         Dikkat: 1 ödevin süresi geçmiş, 7+ gündür teslim yok ya da başarı %70'in altı. Başarı, yapay zekânın
-        değerlendirmesine dayanır.
+        değerlendirmesine dayanır. Aynı konudaki son 3 ödevin hepsinde başarı %60'ın altındaysa o konu
+        için de Dikkat uyarısı çıkar.
       </p>
     </div>
   );

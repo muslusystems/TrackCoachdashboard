@@ -18,6 +18,8 @@ type Sub = {
   createdAt: string;
   score: { correct_count?: number; wrong_count?: number } | null;
   analysis: string | null;
+  assignmentId?: string | null;
+  topic?: string | null; // ödevin konusu
 };
 
 const dayKey = (d: string) =>
@@ -115,6 +117,29 @@ export function evaluateStudent(
     } else if (recentSuccess < 70) {
       raise("yellow");
       reasons.push(`Son teslimlerde başarı %${recentSuccess}`);
+    }
+  }
+
+  // 4) Konu bazlı: aynı konudaki son 3 ödevin hepsinde başarı %60'ın altında
+  const latestPerAsg = new Map<string, Sub>();
+  for (const sub of subsSorted) {
+    if (!sub.assignmentId || !sub.topic) continue;
+    if (!latestPerAsg.has(sub.assignmentId)) latestPerAsg.set(sub.assignmentId, sub);
+  }
+  const byTopic = new Map<string, number[]>();
+  for (const sub of latestPerAsg.values()) {
+    const sc = scoreOf(sub);
+    if (!sc) continue;
+    const arr = byTopic.get(sub.topic as string) || [];
+    arr.push(Math.round((sc.c / (sc.c + sc.w)) * 100)); // yeniden eskiye
+    byTopic.set(sub.topic as string, arr);
+  }
+  for (const [topic, arr] of byTopic) {
+    if (arr.length >= 3 && arr.slice(0, 3).every((v) => v < 60)) {
+      let n = 0;
+      while (n < arr.length && arr[n] < 60) n++;
+      raise("yellow");
+      reasons.push(`${topic}: ${n} ödevdir zorlanıyor`);
     }
   }
 
