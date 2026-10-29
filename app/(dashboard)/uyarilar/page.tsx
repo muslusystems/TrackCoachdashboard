@@ -63,7 +63,11 @@ export default function UyarilarPage() {
       .then((r) => r.json())
       .then((res) => {
         if (res.error) setError(res.error);
-        else setRows(res.students || []);
+        else {
+          setRows(res.students || []);
+          // Acil öğrenciler görüldü olarak işaretlenir (kenar çubuğu rozeti için)
+          fetch("/api/uyarilar/goruldu", { method: "POST" }).catch(() => {});
+        }
         setLoading(false);
       })
       .catch(() => {
