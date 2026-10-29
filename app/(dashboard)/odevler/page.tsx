@@ -30,6 +30,8 @@ type Assignment = {
     correct: number | null;
     wrong: number | null;
     wrong_questions: number[];
+    corrected?: boolean;
+    objection_pending?: boolean;
   }[];
   student_assignments: {
     id: string;
@@ -332,6 +334,16 @@ export default function OdevlerPage() {
                 <tr key={x.id} className="border-b border-ink-50 last:border-0">
                   <td className={"px-3 py-2 font-medium " + (done ? "text-green-700" : "text-red-600")}>
                     {x.students?.name_surname || "(öğrenci)"}
+                    {r?.corrected && (
+                      <span className="ml-2 rounded-full bg-signal-50 px-2 py-0.5 text-[10px] font-semibold text-signal-700">
+                        Koç düzeltti
+                      </span>
+                    )}
+                    {r?.objection_pending && (
+                      <span className="ml-2 rounded-full bg-pending-100 px-2 py-0.5 text-[10px] font-semibold text-pending-700">
+                        İtiraz bekliyor
+                      </span>
+                    )}
                   </td>
                   <td className={"px-3 py-2 text-xs font-semibold " + (done ? "text-green-700" : "text-red-600")}>
                     {done ? "Ödev teslim edildi" : "Ödev teslim bekliyor"}

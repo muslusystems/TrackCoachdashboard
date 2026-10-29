@@ -24,7 +24,7 @@ export async function GET() {
   if (ids.length > 0) {
     const { data: subs, error: sErr } = await supabaseAdmin
       .from("submissions")
-      .select("assignment_id, student_id, score_data, gemini_analysis, created_at")
+      .select("assignment_id, student_id, score_data, gemini_analysis, created_at, corrected_at, objection_status")
       .in("assignment_id", ids)
       .order("created_at", { ascending: false });
     if (sErr) return NextResponse.json({ error: sErr.message }, { status: 500 });
@@ -40,6 +40,8 @@ export async function GET() {
         correct: sc?.correct ?? null,
         wrong: sc?.wrong ?? null,
         wrong_questions: sc?.wrongQuestions ?? [],
+        corrected: !!x.corrected_at,
+        objection_pending: x.objection_status === "pending",
       });
     }
   }
