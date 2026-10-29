@@ -24,11 +24,27 @@ export async function computeAlerts(coachId: string): Promise<AlertStudent[]> {
       .in("student_id", ids),
     supabaseAdmin
       .from("submissions")
-      .select("student_id, score_data, gemini_analysis, created_at")
+      .select("student_id, assignment_id, score_data, gemini_analysis, created_at")
       .in("student_id", ids)
       .order("created_at", { ascending: false }),
   ]);
   if (e1 || e2) throw new Error((e1 || e2)!.message);
+
+  // Ödev -> konu adı
+  const asgIds = [...new Set((subs || []).map((x) => x.assignment_id).filter(Boolean))] as string[];
+  const topicOfAsg = new Map<string, string>();
+  if (asgIds.length > 0) {
+    const { data: asgs } = await supabaseAdmin.from("assignments").select("id, topic_id").in("id", asgIds);
+    const topicIds = [...new Set((asgs || []).map((a) => a.topic_id).filter(Boolean))] as string[];
+    if (topicIds.length > 0) {
+      const { data: tps } = await supabaseAdmin.from("topics").select("id, name").in("id", topicIds);
+      const names = new Map((tps || []).map((t) => [t.id as string, t.name as string]));
+      for (const a of asgs || []) {
+        const n = a.topic_id ? names.get(a.topic_id) : null;
+        if (n) topicOfAsg.set(a.id as string, n);
+      }
+    }
+  }
 
   const today = dayKey(new Date());
   return list.map((s) => {
@@ -51,6 +67,8 @@ export async function computeAlerts(coachId: string): Promise<AlertStudent[]> {
         createdAt: x.created_at as string,
         score: x.score_data as any,
         analysis: x.gemini_analysis as string | null,
+        assignmentId: x.assignment_id as string | null,
+        topic: x.assignment_id ? topicOfAsg.get(x.assignment_id as string) ?? null : null,
       })),
       today
     );
