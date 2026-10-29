@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Users, GraduationCap, FileUp, FileText, BellRing } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -14,6 +15,14 @@ const NAV_ITEMS = [
 
 export function SidebarNav({ alertCount = 0 }: { alertCount?: number }) {
   const pathname = usePathname();
+  const [count, setCount] = useState(alertCount);
+  // Dikkat Panosu açılınca rozet kaybolur
+  useEffect(() => {
+    if (pathname.startsWith("/uyarilar")) setCount(0);
+  }, [pathname]);
+  useEffect(() => {
+    if (!pathname.startsWith("/uyarilar")) setCount(alertCount);
+  }, [alertCount]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <nav className="flex flex-1 flex-col gap-1">
       {NAV_ITEMS.map((item) => {
@@ -39,12 +48,12 @@ export function SidebarNav({ alertCount = 0 }: { alertCount?: number }) {
               <item.icon size={17} />
             </span>
             <span className="flex-1">{item.label}</span>
-            {item.href === "/uyarilar" && alertCount > 0 && (
+            {item.href === "/uyarilar" && count > 0 && (
               <span
                 className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white"
-                aria-label={`${alertCount} öğrenci ilgi bekliyor`}
+                aria-label={`${count} öğrenci ilgi bekliyor`}
               >
-                {alertCount}
+                {count}
               </span>
             )}
           </Link>

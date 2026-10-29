@@ -3,7 +3,9 @@ import { LogOut } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { SidebarNav } from "@/components/SidebarNav";
 import { avatarStyle, initials } from "@/lib/utils";
+import { cookies } from "next/headers";
 import { computeAlerts } from "@/lib/alerts";
+import { SEEN_COOKIE } from "@/lib/alertSeen";
 
 export default async function DashboardLayout({
   children,
@@ -16,7 +18,9 @@ export default async function DashboardLayout({
   let alertCount = 0;
   try {
     const alerts = await computeAlerts(session.coachId);
-    alertCount = alerts.filter((a) => a.level === "red").length;
+    const seen = new Set((cookies().get(SEEN_COOKIE)?.value || "").split(",").filter(Boolean));
+    // Koçun Dikkat Panosu'nda zaten gördüğü acil öğrenciler rozete sayılmaz
+    alertCount = alerts.filter((a) => a.level === "red" && !seen.has(a.id)).length;
   } catch {
     alertCount = 0;
   }
