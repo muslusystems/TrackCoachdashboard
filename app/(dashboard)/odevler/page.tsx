@@ -24,6 +24,13 @@ type Assignment = {
   lesson_id: string | null;
   topic_id: string | null;
   created_at: string;
+  results: {
+    student_id: string;
+    created_at: string;
+    correct: number | null;
+    wrong: number | null;
+    wrong_questions: number[];
+  }[];
   student_assignments: {
     id: string;
     status: string;
@@ -270,6 +277,91 @@ export default function OdevlerPage() {
     );
   }
 
+  function renderResults(a: Assignment) {
+    const list = a.student_assignments || [];
+    const byStudent = new Map(a.results.map((r) => [r.student_id, r]));
+    const rows = list.map((x) => {
+      const r = byStudent.get(x.student_id);
+      const done = x.status !== "pending" || !!r;
+      const total = r && r.correct != null && r.wrong != null ? r.correct + r.wrong : 0;
+      const pct = total > 0 ? Math.round(((r!.correct as number) / total) * 100) : null;
+      return { x, r, done, pct };
+    });
+    // Teslim edenler önce (yüksek başarıdan düşüğe), bekleyenler sonda
+    rows.sort((p, q) => Number(q.done) - Number(p.done) || (q.pct ?? -1) - (p.pct ?? -1));
+    const scored = rows.filter((r) => r.pct != null);
+    const avg = scored.length ? Math.round(scored.reduce((t, r) => t + (r.pct as number), 0) / scored.length) : null;
+    const wrongCount = new Map<number, number>();
+    rows.forEach((r) => r.r?.wrong_questions.forEach((n) => wrongCount.set(n, (wrongCount.get(n) || 0) + 1)));
+    const topWrong = [...wrongCount.entries()]
+      .filter(([, c]) => c >= 2 || scored.length === 1)
+      .sort((p, q) => q[1] - p[1] || p[0] - q[0])
+      .slice(0, 5);
+    const barColor = (v: number) => (v >= 70 ? "bg-progress-500" : v >= 50 ? "bg-pending-500" : "bg-red-500");
+
+    return (
+      <div className="mt-4 space-y-3">
+        <div className="flex flex-wrap gap-2 text-xs font-medium">
+          <span className="rounded-full bg-progress-100 px-3 py-1 text-progress-700">
+            Teslim: {rows.filter((r) => r.done).length}/{rows.length}
+          </span>
+          <span className="rounded-full bg-signal-50 px-3 py-1 text-signal-700">
+            Ortalama başarı: {avg == null ? "—" : `%${avg}`}
+          </span>
+          {topWrong.length > 0 && (
+            <span className="rounded-full bg-red-50 px-3 py-1 text-red-700">
+              En çok yanlış yapılan sorular:{" "}
+              {topWrong.map(([n, c]) => `${n}. soru (${c} kişi)`).join(", ")}
+            </span>
+          )}
+        </div>
+        <div className="overflow-x-auto rounded-xl border border-ink-100">
+          <table className="w-full min-w-[34rem] text-sm">
+            <thead>
+              <tr className="border-b border-ink-100 bg-ink-50 text-left text-xs text-ink-400">
+                <th className="px-3 py-2 font-medium">Öğrenci</th>
+                <th className="px-3 py-2 font-medium">Durum</th>
+                <th className="px-3 py-2 text-right font-medium">Doğru</th>
+                <th className="px-3 py-2 text-right font-medium">Yanlış</th>
+                <th className="px-3 py-2 font-medium">Başarı</th>
+                <th className="px-3 py-2 font-medium">Teslim</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(({ x, r, done, pct }) => (
+                <tr key={x.id} className="border-b border-ink-50 last:border-0">
+                  <td className={"px-3 py-2 font-medium " + (done ? "text-green-700" : "text-red-600")}>
+                    {x.students?.name_surname || "(öğrenci)"}
+                  </td>
+                  <td className={"px-3 py-2 text-xs font-semibold " + (done ? "text-green-700" : "text-red-600")}>
+                    {done ? "Ödev teslim edildi" : "Ödev teslim bekliyor"}
+                  </td>
+                  <td className="px-3 py-2 text-right text-ink-900">{r?.correct ?? "—"}</td>
+                  <td className="px-3 py-2 text-right text-ink-900">{r?.wrong ?? "—"}</td>
+                  <td className="px-3 py-2">
+                    {pct == null ? (
+                      <span className="text-ink-400">—</span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <span className="h-1.5 w-16 overflow-hidden rounded-full bg-ink-100">
+                          <span className={"block h-full rounded-full " + barColor(pct)} style={{ width: `${pct}%` }} />
+                        </span>
+                        <span className="text-xs font-medium text-ink-900">%{pct}</span>
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-ink-600">
+                    {r ? new Date(r.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "long" }) : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
   function renderAssignment(a: Assignment) {
     const list = a.student_assignments || [];
     const delivered = list.filter((x) => x.status !== "pending").length;
@@ -332,23 +424,7 @@ export default function OdevlerPage() {
               </Button>
             </div>
           </div>
-          {isOpen && (
-            <ul className="mt-3 divide-y divide-ink-100 rounded-md border border-ink-100 text-sm">
-              {list.map((x) => {
-                const done = x.status !== "pending";
-                return (
-                  <li key={x.id} className="flex items-center justify-between gap-3 px-3 py-2">
-                    <span className={done ? "font-medium text-green-700" : "font-medium text-red-600"}>
-                      {x.students?.name_surname || "(öğrenci)"}
-                    </span>
-                    <span className={done ? "text-xs font-semibold text-green-700" : "text-xs font-semibold text-red-600"}>
-                      {done ? "Ödev teslim edildi" : "Ödev teslim bekliyor"}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          {isOpen && renderResults(a)}
         </CardContent>
       </Card>
     );
