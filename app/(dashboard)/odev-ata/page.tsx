@@ -149,6 +149,13 @@ export default function OdevAtaPage() {
       return;
     }
 
+    if (!answerKey.trim() && !answerFile) {
+      const ok = window.confirm(
+        "Cevap anahtarı eklemedin.\n\nAnahtar yokken yapay zekâ cevapları kendi bilgisiyle değerlendirir; çizim, geometri ve çok adımlı sorularda sonuçlar daha az güvenilir olabilir. Bu ödevin sonuçları 'Anahtarsız' diye işaretlenecek.\n\nYine de atansın mı?"
+      );
+      if (!ok) return;
+    }
+
     setSubmitting(true);
     try {
       const webhookUrl = process.env.NEXT_PUBLIC_N8N_ODEV_ATA_WEBHOOK_URL;
