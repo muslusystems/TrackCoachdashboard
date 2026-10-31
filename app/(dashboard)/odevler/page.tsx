@@ -21,6 +21,7 @@ type Assignment = {
   drive_pdf_url: string | null;
   due_date: string | null;
   answer_key: string | null;
+  answer_key_file_url?: string | null;
   lesson_id: string | null;
   topic_id: string | null;
   created_at: string;
@@ -310,6 +311,11 @@ export default function OdevlerPage() {
           <span className="rounded-full bg-signal-50 px-3 py-1 text-signal-700">
             Ortalama başarı: {avg == null ? "—" : `%${avg}`}
           </span>
+          {!a.answer_key && !a.answer_key_file_url && (
+            <span className="rounded-full bg-pending-100 px-3 py-1 text-pending-700">
+              Anahtarsız: sonuçlar yapay zekânın kendi değerlendirmesi
+            </span>
+          )}
           {topWrong.length > 0 && (
             <span className="rounded-full bg-red-50 px-3 py-1 text-red-700">
               En çok yanlış yapılan sorular:{" "}
@@ -384,7 +390,14 @@ export default function OdevlerPage() {
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <p className="font-medium text-ink-900">{a.title}</p>
+                <p className="font-medium text-ink-900">
+                  {a.title}
+                  {!a.answer_key && !a.answer_key_file_url && (
+                    <span className="ml-2 rounded-full bg-pending-100 px-2 py-0.5 text-[10px] font-semibold text-pending-700">
+                      Anahtarsız
+                    </span>
+                  )}
+                </p>
                 {a.answer_key && (
                   <span title="Cevap anahtarı tanımlı">
                     <KeyRound size={14} className="text-progress-500" />
