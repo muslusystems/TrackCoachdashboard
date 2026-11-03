@@ -31,6 +31,46 @@ const C = {
 };
 const PALETTE = ["#2563eb", "#7c3aed", "#db2777", "#ea580c", "#0d9488", "#4f46e5"];
 
+
+type LessonNotes = { good: string[]; bad: string[] };
+const norm = (x: string) => String(x || "").toLocaleLowerCase("tr-TR").replace(/\s+/g, " ").trim();
+const bullet = (l: string) => l.replace(/^[-•–*]\s*/, "").trim();
+
+// Yeni biçim: "DERS: X" blokları (Başarılı/Zorlanılan) + "GENEL YORUM" bölümü.
+// Eski biçimde (DERS: yok) tüm metin genel bölüm olarak kalır.
+function parseAi(text: string) {
+  const lines = String(text || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const byLesson = new Map<string, LessonNotes>();
+  const general: string[] = [];
+  let cur: LessonNotes | null = null;
+  let mode: "good" | "bad" | null = null;
+  let inGeneral = false;
+  for (const ln of lines) {
+    const mDers = ln.match(/^DERS\s*:\s*(.+)$/i);
+    if (!inGeneral && mDers) {
+      cur = { good: [], bad: [] };
+      byLesson.set(norm(mDers[1]), cur);
+      mode = null;
+      continue;
+    }
+    if (/^(\d\.\s*)?genel yorum/i.test(ln)) {
+      inGeneral = true;
+      cur = null;
+      general.push("4. Genel Yorum ve Öneri");
+      continue;
+    }
+    if (!inGeneral && cur) {
+      if (/^(\d\.\s*)?başarılı/i.test(ln)) { mode = "good"; continue; }
+      if (/^(\d\.\s*)?zorlan/i.test(ln)) { mode = "bad"; continue; }
+      const b = bullet(ln);
+      if (mode && b && b !== "-") cur[mode].push(b);
+      continue;
+    }
+    general.push(ln);
+  }
+  return { byLesson, general, structured: byLesson.size > 0 || inGeneral };
+}
+
 export async function POST(req: Request) {
   const secret = process.env.NEXT_PUBLIC_TRACKCOACH_WEBHOOK_SECRET || process.env.TRACKCOACH_WEBHOOK_SECRET;
   if (!secret || req.headers.get("x-trackcoach-secret") !== secret) {
@@ -94,6 +134,8 @@ export async function POST(req: Request) {
     });
     doc.y = by + 64;
 
+    const ai = parseAi(s.aiText || "");
+
     // Dersler
     if (!s.lessons || !s.lessons.length) {
       doc.fillColor(C.gray).font(FONT).fontSize(10).text("Bu hafta atanan ya da teslim edilen ödev yok.", L, doc.y, { width: W });
@@ -129,11 +171,34 @@ export async function POST(req: Request) {
         doc.moveTo(L + 8, ty + 21).lineTo(L + W, ty + 21).lineWidth(0.5).strokeColor(C.line).stroke();
         doc.y = ty + 24;
       });
-      doc.moveDown(0.5);
+      const notes = ai.structured ? ai.byLesson.get(norm(les.name)) : undefined;
+      if (notes) {
+        const sect = (title: string, items: string[], col: string) => {
+          need(36);
+          doc.moveDown(0.2);
+          doc.fillColor(col).font(BOLD).fontSize(10.5).text(title, L + 8, doc.y, { width: W - 8 });
+          doc.moveDown(0.15);
+          if (!items.length) {
+            doc.fillColor(C.gray).font(FONT).fontSize(10).text("Bu hafta belirgin bir konu yok.", L + 22, doc.y, { width: W - 22 });
+            doc.moveDown(0.2);
+            return;
+          }
+          items.forEach((txt) => {
+            need(22);
+            const yy = doc.y;
+            doc.circle(L + 14, yy + 6, 1.8).fill(col);
+            doc.fillColor(C.ink).font(FONT).fontSize(10).text(txt, L + 22, yy, { width: W - 22, lineGap: 2 });
+            doc.moveDown(0.2);
+          });
+        };
+        sect("Başarılı Olunan Konular", notes.good, C.green);
+        sect("Zorlanılan Konular", notes.bad, C.red);
+      }
+      doc.moveDown(0.6);
     });
 
-    // Yapay zekâ değerlendirmesi
-    const lines = String(s.aiText || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    // Yapay zekâ değerlendirmesi (genel yorum; eski biçimde tüm metin)
+    const lines = ai.general;
     lines.forEach((ln) => {
       if (/^[2-9]\.\s/.test(ln)) {
         need(50);
