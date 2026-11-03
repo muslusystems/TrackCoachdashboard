@@ -4,7 +4,8 @@ import PDFDocument from "pdfkit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Topic = { name: string; d: number; y: number };
+type Prev = { d: number; y: number; date?: string; weeksAgo?: number };
+type Topic = { name: string; d: number; y: number; prev?: Prev | null };
 type Lesson = { name: string; assigned: number; solved: number; topics: Topic[] };
 type Student = {
   name: string;
@@ -151,7 +152,7 @@ export async function POST(req: Request) {
       doc.y = ly + 32;
 
       topics.forEach((t) => {
-        need(24);
+        need(t.prev ? 40 : 24);
         const ty = doc.y;
         doc.fillColor(C.ink).font(FONT).fontSize(10).text(String(t.name || ""), L + 8, ty + 3, { width: W * 0.42, lineBreak: false, ellipsis: true });
         const barX = L + W * 0.46;
@@ -168,8 +169,26 @@ export async function POST(req: Request) {
         }
         doc.fillColor(C.green).font(BOLD).fontSize(10).text(`${t.d ?? 0} D`, L + W * 0.83, ty + 3, { width: 40, lineBreak: false });
         doc.fillColor(C.red).text(`${t.y ?? 0} Y`, L + W * 0.83 + 38, ty + 3, { width: 40, lineBreak: false });
-        doc.moveTo(L + 8, ty + 21).lineTo(L + W, ty + 21).lineWidth(0.5).strokeColor(C.line).stroke();
-        doc.y = ty + 24;
+        let rowH = 24;
+        if (t.prev) {
+          const p = t.prev;
+          const pt = (p.d || 0) + (p.y || 0);
+          const ct = (t.d || 0) + (t.y || 0);
+          const when = p.weeksAgo ? `${p.weeksAgo} hf önce` : "";
+          let txt = `Önceki${p.date ? " (" + p.date + (when ? " · " + when : "") + ")" : ""}: ${p.d || 0} D, ${p.y || 0} Y`;
+          let col = C.gray;
+          if (pt >= 5 && ct >= 5) {
+            const a = Math.round(((p.d || 0) * 100) / pt);
+            const b = Math.round(((t.d || 0) * 100) / ct);
+            const diff = b - a;
+            txt += `   •   %${a} → %${b} ${diff > 0 ? "▲" : diff < 0 ? "▼" : "="}`;
+            col = diff > 0 ? C.green : diff < 0 ? C.red : C.gray;
+          }
+          doc.fillColor(col).font(FONT).fontSize(8.5).text(txt, L + 8, ty + 20, { width: W - 8, lineBreak: false });
+          rowH = 36;
+        }
+        doc.moveTo(L + 8, ty + rowH - 3).lineTo(L + W, ty + rowH - 3).lineWidth(0.5).strokeColor(C.line).stroke();
+        doc.y = ty + rowH;
       });
       const notes = ai.structured ? ai.byLesson.get(norm(les.name)) : undefined;
       if (notes) {
