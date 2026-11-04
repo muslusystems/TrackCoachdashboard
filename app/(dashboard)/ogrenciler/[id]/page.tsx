@@ -11,7 +11,7 @@ type AssignedItem = {
   id: string;
   status: string;
   created_at: string;
-  assignments: { id: string; title: string; due_date: string | null; drive_pdf_url: string | null } | null;
+  assignments: { id: string; title: string; due_date: string | null; drive_pdf_url: string | null; lesson_name?: string | null; topic_name?: string | null } | null;
 };
 
 type SubmissionItem = {
@@ -136,6 +136,20 @@ export default function OgrenciDetayPage() {
                       <p className="font-medium text-lg text-ink-900">
                         {a.assignments?.title || "(silinmiş ödev)"}
                       </p>
+                      {(a.assignments?.lesson_name || a.assignments?.topic_name) && (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                          {a.assignments?.lesson_name && (
+                            <span className="rounded-full bg-signal-50 px-2.5 py-0.5 text-xs font-medium text-signal-700">
+                              {a.assignments.lesson_name}
+                            </span>
+                          )}
+                          {a.assignments?.topic_name && (
+                            <span className="rounded-full bg-ink-50 px-2.5 py-0.5 text-xs font-medium text-ink-600">
+                              {a.assignments.topic_name}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <div className="mt-1 flex items-center gap-3 text-xs text-ink-400">
                         {a.assignments?.due_date && <span>Son tarih: {new Date(a.assignments.due_date).toLocaleDateString("tr-TR")}</span>}
                         {a.assignments?.drive_pdf_url && (

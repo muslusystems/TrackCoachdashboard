@@ -22,7 +22,7 @@ export async function GET(
 
   const { data: assignedRaw, error: assignedError } = await supabaseAdmin
     .from("student_assignments")
-    .select("id, status, created_at, assignments(id, title, due_date, drive_pdf_url)")
+    .select("id, status, created_at, assignments(id, title, due_date, drive_pdf_url, lesson_id, topic_id)")
     .eq("student_id", params.id)
     .order("created_at", { ascending: false });
 
@@ -39,9 +39,36 @@ export async function GET(
     );
   }
 
+  // Ders ve konu adlarını ödevlere ekle
+  const assigned: any[] = assignedRaw || [];
+  const lessonIds = Array.from(new Set(assigned.map((a) => a.assignments?.lesson_id).filter(Boolean)));
+  const topicIds = Array.from(new Set(assigned.map((a) => a.assignments?.topic_id).filter(Boolean)));
+  const lessonName = new Map<string, string>();
+  const topicName = new Map<string, string>();
+  if (lessonIds.length) {
+    const { data } = await supabaseAdmin.from("lessons").select("id, name").in("id", lessonIds);
+    (data || []).forEach((l: any) => lessonName.set(l.id, l.name));
+  }
+  if (topicIds.length) {
+    const { data } = await supabaseAdmin.from("topics").select("id, name").in("id", topicIds);
+    (data || []).forEach((t: any) => topicName.set(t.id, t.name));
+  }
+  const assignedWithNames = assigned.map((a) =>
+    a.assignments
+      ? {
+          ...a,
+          assignments: {
+            ...a.assignments,
+            lesson_name: lessonName.get(a.assignments.lesson_id) || null,
+            topic_name: topicName.get(a.assignments.topic_id) || null,
+          },
+        }
+      : a
+  );
+
   return NextResponse.json({
     student,
-    assignedAssignments: assignedRaw || [],
+    assignedAssignments: assignedWithNames,
     submissions: submissionsRaw || [],
   });
 }
