@@ -6,6 +6,7 @@ import { avatarStyle, initials } from "@/lib/utils";
 import { cookies } from "next/headers";
 import { computeAlerts } from "@/lib/alerts";
 import { SEEN_COOKIE } from "@/lib/alertSeen";
+import { PushToggle } from "@/components/PushToggle";
 
 export default async function DashboardLayout({
   children,
@@ -40,6 +41,7 @@ export default async function DashboardLayout({
           </div>
         </div>
         <SidebarNav alertCount={alertCount} />
+        <PushToggle />
         <div className="mt-5 flex items-center gap-3 rounded-xl bg-white/[0.08] p-3 md:mt-6">
           <span
             className={
