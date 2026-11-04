@@ -1,9 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "TrackCoach — Koç Paneli",
   description: "Öğrencilerini, sınıflarını ve ödevlerini tek yerden yönet.",
+  applicationName: "TrackCoach",
+  appleWebApp: { capable: true, title: "TrackCoach", statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#030d1e",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
