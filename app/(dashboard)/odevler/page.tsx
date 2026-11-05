@@ -153,6 +153,8 @@ export default function OdevlerPage() {
   }
 
   async function handleDelete(id: string) {
+    const a = assignments.find((x) => x.id === id);
+    if (!window.confirm(`"${a?.title || "Bu ödev"}" ödevini silmek istediğine emin misin?\n\nÖdev listeden kaldırılır; öğrencilerin geçmiş teslimleri saklanır.`)) return;
     setDeletingId(id);
     const res = await fetch(`/api/odevler/${id}`, { method: "DELETE" });
     setDeletingId(null);
