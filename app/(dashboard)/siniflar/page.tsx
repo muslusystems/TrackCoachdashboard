@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, GraduationCap, Users, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { Plus, GraduationCap, Users, UserPlus, ChevronDown, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,10 +82,18 @@ export default function SiniflarPage() {
     load();
   }
 
+  // Sınıfların öğrenci listeleri (silinmemiş öğrenciler)
+  const [members, setMembers] = useState<StudentRow[]>([]);
+  const [openClasses, setOpenClasses] = useState<Record<string, boolean>>({});
+
   async function load() {
     setLoading(true);
-    const res = await fetch("/api/siniflar").then((r) => r.json());
+    const [res, st] = await Promise.all([
+      fetch("/api/siniflar").then((r) => r.json()),
+      fetch("/api/ogrenciler").then((r) => r.json()).catch(() => ({ students: [] })),
+    ]);
     setClasses(res.classes || []);
+    setMembers(st.students || []);
     setLoading(false);
   }
 
@@ -192,12 +201,27 @@ export default function SiniflarPage() {
                 <CardTitle>{c.class_name}</CardTitle>
               </CardHeader>
               <CardContent className="flex items-center justify-between">
-                <p className="flex items-center gap-2 text-sm text-ink-600">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-signal-50 text-signal-600">
-                    <Users size={15} />
-                  </span>
-                  {c.students?.[0]?.count ?? 0} öğrenci
-                </p>
+                {(() => {
+                  const list = members.filter((m) => m.class_id === c.id);
+                  const open = !!openClasses[c.id];
+                  return (
+                    <button
+                      type="button"
+                      disabled={list.length === 0}
+                      onClick={() => setOpenClasses((p) => ({ ...p, [c.id]: !p[c.id] }))}
+                      className="flex items-center gap-2 rounded-lg text-sm text-ink-600 enabled:hover:text-ink-900 disabled:cursor-default"
+                      aria-expanded={open}
+                    >
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-signal-50 text-signal-600">
+                        <Users size={15} />
+                      </span>
+                      <span className={list.length ? "underline decoration-dotted underline-offset-4" : ""}>
+                        {list.length} öğrenci
+                      </span>
+                      {list.length > 0 && (open ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
+                    </button>
+                  );
+                })()}
                 <div className="flex items-center gap-1">
                 <button
                   onClick={() => openAdd(c)}
@@ -213,6 +237,22 @@ export default function SiniflarPage() {
                 </button>
                 </div>
               </CardContent>
+              {openClasses[c.id] && (
+                <ul className="mx-6 mb-4 space-y-1 border-t border-ink-100 pt-3">
+                  {members
+                    .filter((m) => m.class_id === c.id)
+                    .map((m) => (
+                      <li key={m.id}>
+                        <Link
+                          href={`/ogrenciler/${m.id}`}
+                          className="block rounded-md px-2 py-1.5 text-sm text-ink-900 hover:bg-signal-50"
+                        >
+                          {m.name_surname}
+                        </Link>
+                      </li>
+                    ))}
+                </ul>
+              )}
             </Card>
           ))}
         </div>
