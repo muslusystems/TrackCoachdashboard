@@ -38,11 +38,12 @@ type Assignment = {
     id: string;
     status: string;
     student_id: string;
-    students: { name_surname: string } | null;
+    students: { name_surname: string; class_id?: string | null } | null;
   }[];
 };
 
 type Lesson = { id: string; name: string };
+type ClassOpt = { id: string; class_name: string };
 type Topic = { id: string; name: string; lesson_id: string };
 
 const NONE = "_none";
@@ -65,6 +66,8 @@ export default function OdevlerPage() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [lessonFolder, setLessonFolder] = useState<string | null>(null);
   const [topicFolder, setTopicFolder] = useState<string | null>(null);
+  const [classes, setClasses] = useState<ClassOpt[]>([]);
+  const [classFolder, setClassFolder] = useState<string | null>(null);
   const [openStudents, setOpenStudents] = useState<Record<string, boolean>>({});
   const [renameTarget, setRenameTarget] = useState<{ kind: "lesson" | "topic"; id: string } | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -75,11 +78,13 @@ export default function OdevlerPage() {
 
   async function load() {
     setLoading(true);
-    const [res, dRes, kRes] = await Promise.all([
+    const [res, dRes, kRes, sRes] = await Promise.all([
       fetch("/api/odevler").then((r) => r.json()),
       fetch("/api/dersler").then((r) => r.json()).catch(() => ({ lessons: [] })),
       fetch("/api/konular").then((r) => r.json()).catch(() => ({ topics: [] })),
+      fetch("/api/siniflar").then((r) => r.json()).catch(() => ({ classes: [] })),
     ]);
+    setClasses(sRes.classes || []);
     setAssignments(res.assignments || []);
     setLessons(dRes.lessons || []);
     setTopics(kRes.topics || []);
@@ -92,6 +97,17 @@ export default function OdevlerPage() {
     a.lesson_id && lessonIds.has(a.lesson_id) ? a.lesson_id : NONE;
   const topicOf = (a: Assignment) =>
     a.topic_id && topicIds.has(a.topic_id) ? a.topic_id : NONE;
+  // Ödevin sınıfları: atandığı öğrencilerin sınıfları (sınıfsızsa NONE). Birden çok sınıf olabilir.
+  const classIds = new Set(classes.map((c) => c.id));
+  const classesOf = (a: Assignment): string[] => {
+    const set = new Set<string>();
+    (a.student_assignments || []).forEach((x) => {
+      const cid = x.students?.class_id;
+      if (cid && classIds.has(cid)) set.add(cid);
+    });
+    return set.size ? Array.from(set) : [NONE];
+  };
+  const inClass = (a: Assignment, cid: string) => classesOf(a).includes(cid);
 
   useEffect(() => {
     load();
@@ -188,6 +204,7 @@ export default function OdevlerPage() {
     }
     if (kind === "lesson") {
       setLessonFolder(null);
+      setClassFolder(null);
       setTopicFolder(null);
     } else {
       setTopicFolder(null);
@@ -245,34 +262,57 @@ export default function OdevlerPage() {
   function renderBreadcrumb() {
     if (lessonFolder === null) return null;
     const lessonName = lessonFolder === NONE ? "Derssiz" : lessons.find((l) => l.id === lessonFolder)?.name || "Ders";
+    const className =
+      classFolder === null ? null : classFolder === NONE ? "Sınıfsız" : classes.find((c) => c.id === classFolder)?.class_name || "Sınıf";
     const topicName =
       topicFolder === null || lessonFolder === NONE
         ? null
         : topicFolder === NONE
         ? "Konusuz"
         : topics.find((t) => t.id === topicFolder)?.name || "Konu";
+    const Sep = () => <ChevronRight size={14} className="text-ink-400" />;
+    const link = "hover:text-ink-900 hover:underline";
     return (
       <div className="mb-4 flex flex-wrap items-center gap-1 text-sm text-ink-600">
         <button
-          className="hover:text-ink-900 hover:underline"
+          className={link}
           onClick={() => {
             setLessonFolder(null);
+            setClassFolder(null);
             setTopicFolder(null);
           }}
         >
           Dersler
         </button>
-        <ChevronRight size={14} className="text-ink-400" />
-        {topicName ? (
-          <button className="hover:text-ink-900 hover:underline" onClick={() => setTopicFolder(null)}>
+        <Sep />
+        {className ? (
+          <button
+            className={link}
+            onClick={() => {
+              setClassFolder(null);
+              setTopicFolder(null);
+            }}
+          >
             {lessonName}
           </button>
         ) : (
           <span className="font-medium text-ink-900">{lessonName}</span>
         )}
+        {className && (
+          <>
+            <Sep />
+            {topicName ? (
+              <button className={link} onClick={() => setTopicFolder(null)}>
+                {className}
+              </button>
+            ) : (
+              <span className="font-medium text-ink-900">{className}</span>
+            )}
+          </>
+        )}
         {topicName && (
           <>
-            <ChevronRight size={14} className="text-ink-400" />
+            <Sep />
             <span className="font-medium text-ink-900">{topicName}</span>
           </>
         )}
@@ -460,7 +500,7 @@ export default function OdevlerPage() {
       <PageHeader
         icon={FileText}
         title="Ödevler"
-        description="Ödevleri ders ve konulara göre klasörlerde gör, kimin teslim ettiğini takip et."
+        description="Ödevleri ders, sınıf ve konulara göre klasörlerde gör, kimin teslim ettiğini takip et."
       />
 
       {loading ? (
@@ -483,6 +523,7 @@ export default function OdevlerPage() {
                   assignments.filter((a) => lessonOf(a) === l.id).length,
                   () => {
                     setLessonFolder(l.id);
+                    setClassFolder(null);
                     setTopicFolder(null);
                   },
                   {
@@ -495,45 +536,85 @@ export default function OdevlerPage() {
               {assignments.some((a) => lessonOf(a) === NONE) &&
                 folderCard(NONE, "Derssiz", assignments.filter((a) => lessonOf(a) === NONE).length, () => {
                   setLessonFolder(NONE);
-                  setTopicFolder(NONE);
+                  setClassFolder(null);
+                  setTopicFolder(null);
                 })}
             </div>
           )}
-          {lessonFolder !== null && lessonFolder !== NONE && topicFolder === null && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {topics
-                .filter((t) => t.lesson_id === lessonFolder)
-                .map((t) =>
-                  folderCard(
-                    t.id,
-                    t.name,
-                    assignments.filter((a) => lessonOf(a) === lessonFolder && topicOf(a) === t.id).length,
-                    () => setTopicFolder(t.id),
-                    {
-                      onRename: () => openRename("topic", t.id, t.name),
-                      onDelete: () =>
-                        deleteFolder(
-                          "topic",
-                          t.id,
-                          t.name,
-                          assignments.filter((a) => lessonOf(a) === lessonFolder && topicOf(a) === t.id).length
-                        ),
-                    }
-                  )
+
+          {lessonFolder !== null && classFolder === null && (() => {
+            const inLesson = assignments.filter((a) => lessonOf(a) === lessonFolder);
+            const classCards = classes
+              .map((c) => ({ c, n: inLesson.filter((a) => inClass(a, c.id)).length }))
+              .filter((x) => x.n > 0);
+            const noClassN = inLesson.filter((a) => inClass(a, NONE)).length;
+            if (!classCards.length && !noClassN) {
+              // Bu derste ödev yok: konular (varsa) yönetilebilsin
+              const own = topics.filter((t) => t.lesson_id === lessonFolder);
+              return (
+                <div className="space-y-3">
+                  <p className="text-sm text-ink-400">Bu derste henüz ödev yok.</p>
+                  {own.length > 0 && (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {own.map((t) =>
+                        folderCard(t.id, t.name, 0, () => {}, {
+                          onRename: () => openRename("topic", t.id, t.name),
+                          onDelete: () => deleteFolder("topic", t.id, t.name, 0),
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {classCards.map(({ c, n }) => folderCard(c.id, c.class_name, n, () => { setClassFolder(c.id); setTopicFolder(null); }))}
+                {noClassN > 0 &&
+                  folderCard(NONE, "Sınıfsız", noClassN, () => { setClassFolder(NONE); setTopicFolder(null); })}
+              </div>
+            );
+          })()}
+
+          {lessonFolder !== null && lessonFolder !== NONE && classFolder !== null && topicFolder === null && (() => {
+            const inLessonClass = assignments.filter((a) => lessonOf(a) === lessonFolder && inClass(a, classFolder));
+            const cnt = (tid: string) => inLessonClass.filter((a) => topicOf(a) === tid).length;
+            const ts = topics
+              .filter((t) => t.lesson_id === lessonFolder)
+              .map((t) => ({ t, n: cnt(t.id) }))
+              .sort((x, y) => Number(y.n > 0) - Number(x.n > 0));
+            const konusuz = cnt(NONE);
+            return (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {ts.map(({ t, n }) =>
+                  folderCard(t.id, t.name, n, () => setTopicFolder(t.id), {
+                    onRename: () => openRename("topic", t.id, t.name),
+                    onDelete: () =>
+                      deleteFolder(
+                        "topic",
+                        t.id,
+                        t.name,
+                        assignments.filter((a) => lessonOf(a) === lessonFolder && topicOf(a) === t.id).length
+                      ),
+                  })
                 )}
-              {assignments.some((a) => lessonOf(a) === lessonFolder && topicOf(a) === NONE) &&
-                folderCard(
-                  NONE,
-                  "Konusuz",
-                  assignments.filter((a) => lessonOf(a) === lessonFolder && topicOf(a) === NONE).length,
-                  () => setTopicFolder(NONE)
-                )}
-            </div>
-          )}
-          {lessonFolder !== null && topicFolder !== null && (
+                {konusuz > 0 && folderCard(NONE, "Konusuz", konusuz, () => setTopicFolder(NONE))}
+              </div>
+            );
+          })()}
+
+          {lessonFolder === NONE && classFolder !== null && (
             <div className="space-y-3">
               {assignments
-                .filter((a) => lessonOf(a) === lessonFolder && topicOf(a) === topicFolder)
+                .filter((a) => lessonOf(a) === NONE && inClass(a, classFolder))
+                .map((a) => renderAssignment(a))}
+            </div>
+          )}
+
+          {lessonFolder !== null && lessonFolder !== NONE && classFolder !== null && topicFolder !== null && (
+            <div className="space-y-3">
+              {assignments
+                .filter((a) => lessonOf(a) === lessonFolder && inClass(a, classFolder) && topicOf(a) === topicFolder)
                 .map((a) => renderAssignment(a))}
             </div>
           )}
