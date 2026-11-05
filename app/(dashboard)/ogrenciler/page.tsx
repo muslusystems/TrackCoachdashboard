@@ -220,22 +220,34 @@ export default function OgrencilerPage() {
                       </Link>
                     </td>
                     <td className="py-3 text-ink-600">
-                      <select
-                        value={s.class_id || ""}
-                        onChange={(e) => sinifDegistir(s.id, e.target.value)}
-                        className={
-                          "h-8 max-w-[12rem] rounded-md border bg-white px-2 text-sm " +
-                          (s.class_id ? "border-ink-200 text-ink-700" : "border-pending-500 text-pending-700")
-                        }
-                      >
-                        <option value="">Sınıfsız</option>
-                        {classes.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.class_name}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={
+                            "text-sm " + (s.class_id ? "font-medium text-ink-900" : "font-medium text-pending-700")
+                          }
+                        >
+                          {s.classes?.class_name || "Sınıfsız"}
+                        </span>
+                        <select
+                          value="__none"
+                          onChange={(e) => sinifDegistir(s.id, e.target.value)}
+                          aria-label={`${s.name_surname} için sınıf değiştir`}
+                          className="h-8 cursor-pointer rounded-md border border-ink-200 bg-white px-2 text-xs font-medium text-signal-600 hover:bg-signal-50"
+                        >
+                          <option value="__none" disabled hidden>
+                            Sınıf değiştir
                           </option>
-                        ))}
-                        <option value="__yeni">➕ Yeni sınıf oluştur…</option>
-                      </select>
+                          {s.class_id && <option value="">Sınıfsız yap</option>}
+                          {classes
+                            .filter((c) => c.id !== s.class_id)
+                            .map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.class_name}
+                              </option>
+                            ))}
+                          <option value="__yeni">➕ Yeni sınıf oluştur…</option>
+                        </select>
+                      </div>
                     </td>
                     <td className="py-3">
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-progress-100 px-2.5 py-1 text-xs font-medium text-progress-700"><span className="h-1.5 w-1.5 rounded-full bg-progress-500" />
