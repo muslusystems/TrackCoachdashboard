@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, GraduationCap, Users } from "lucide-react";
+import { Plus, GraduationCap, Users, UserPlus } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,13 @@ type ClassRow = {
   students: { count: number }[];
 };
 
+type StudentRow = {
+  id: string;
+  name_surname: string;
+  class_id: string | null;
+  classes: { class_name: string } | null;
+};
+
 export default function SiniflarPage() {
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +34,52 @@ export default function SiniflarPage() {
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+
+  // Sınıfa öğrenci ekleme
+  const [addTarget, setAddTarget] = useState<ClassRow | null>(null);
+  const [students, setStudents] = useState<StudentRow[]>([]);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [addSaving, setAddSaving] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  async function openAdd(c: ClassRow) {
+    setAddTarget(c);
+    setPicked(new Set());
+    setAddError("");
+    const res = await fetch("/api/ogrenciler").then((r) => r.json()).catch(() => ({ students: [] }));
+    setStudents(res.students || []);
+  }
+
+  function togglePick(id: string) {
+    setPicked((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }
+
+  async function handleAddStudents() {
+    if (!addTarget) return;
+    if (!picked.size) {
+      setAddError("En az bir öğrenci seç");
+      return;
+    }
+    setAddSaving(true);
+    setAddError("");
+    const res = await fetch(`/api/siniflar/${addTarget.id}/ogrenciler`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentIds: Array.from(picked) }),
+    });
+    setAddSaving(false);
+    if (!res.ok) {
+      setAddError("Eklenemedi, tekrar dene.");
+      return;
+    }
+    setAddTarget(null);
+    load();
+  }
 
   async function load() {
     setLoading(true);
@@ -145,17 +198,63 @@ export default function SiniflarPage() {
                   </span>
                   {c.students?.[0]?.count ?? 0} öğrenci
                 </p>
+                <div className="flex items-center gap-1">
+                <button
+                  onClick={() => openAdd(c)}
+                  className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-signal-600 transition-colors hover:bg-signal-50 hover:text-signal-800"
+                >
+                  <UserPlus size={13} /> Öğrenci ekle
+                </button>
                 <button 
                   onClick={() => sinifSil(c.id)} 
                   className="rounded-lg px-2.5 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-700"
                 >
                   Sil
                 </button>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <Dialog open={!!addTarget} onOpenChange={(o) => !o && setAddTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{addTarget ? `${addTarget.class_name} sınıfına öğrenci ekle` : ""}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {students.filter((s) => s.class_id !== addTarget?.id).length === 0 ? (
+              <p className="text-sm text-ink-400">Eklenecek öğrenci yok. Tüm öğrencilerin zaten bu sınıfta.</p>
+            ) : (
+              <div className="max-h-72 space-y-1 overflow-y-auto rounded-md border border-ink-100 p-2">
+                {students
+                  .filter((s) => s.class_id !== addTarget?.id)
+                  .map((s) => (
+                    <label
+                      key={s.id}
+                      className="flex cursor-pointer items-center justify-between gap-3 rounded-md px-2 py-1.5 text-sm hover:bg-signal-50/60"
+                    >
+                      <span className="flex items-center gap-2 text-ink-900">
+                        <input
+                          type="checkbox"
+                          checked={picked.has(s.id)}
+                          onChange={() => togglePick(s.id)}
+                        />
+                        {s.name_surname}
+                      </span>
+                      <span className="text-xs text-ink-400">{s.classes?.class_name || "Sınıfsız"}</span>
+                    </label>
+                  ))}
+              </div>
+            )}
+            {addError && <p className="text-sm text-pending-700">{addError}</p>}
+            <Button onClick={handleAddStudents} disabled={addSaving} className="w-full">
+              {addSaving ? "Ekleniyor…" : `Seçilenleri ekle${picked.size ? ` (${picked.size})` : ""}`}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
