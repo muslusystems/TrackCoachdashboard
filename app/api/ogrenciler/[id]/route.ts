@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getSession } from "@/lib/session";
+import { assignStudentToClass } from "@/lib/sinifAta";
 
 export async function GET(
   request: Request,
@@ -71,4 +72,19 @@ export async function GET(
     assignedAssignments: assignedWithNames,
     submissions: submissionsRaw || [],
   });
+}
+
+// Öğrencinin sınıfını değiştir: { class_id } | { new_class_name } | { class_id: null } (sınıfsız)
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+  const body = await request.json().catch(() => null);
+  if (!body) return NextResponse.json({ error: "Geçersiz istek" }, { status: 400 });
+  const r = await assignStudentToClass(
+    session.coachId,
+    { id: params.id },
+    { classId: body.class_id || null, newName: body.new_class_name || null }
+  );
+  if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+  return NextResponse.json({ ok: true, className: r.className, created: r.created });
 }
