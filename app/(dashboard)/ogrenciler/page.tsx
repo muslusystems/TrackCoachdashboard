@@ -51,6 +51,29 @@ export default function OgrencilerPage() {
     load();
   }, []);
 
+  // Öğrencinin sınıfını değiştir (mevcut sınıf, sınıfsız ya da yeni sınıf oluştur)
+  async function sinifDegistir(studentId: string, value: string) {
+    let body: Record<string, unknown>;
+    if (value === "__yeni") {
+      const ad = window.prompt("Yeni sınıfın adı (örn. 9. Sınıf):");
+      if (!ad || !ad.trim()) return;
+      body = { new_class_name: ad.trim() };
+    } else {
+      body = { class_id: value || null };
+    }
+    const res = await fetch(`/api/ogrenciler/${studentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      alert("Sınıf değiştirilemedi: " + (j.error || "hata"));
+      return;
+    }
+    load();
+  }
+
   const ogrenciSil = async (studentId: string) => {
       const onay = window.confirm("⚠️ Bu öğrenciyi silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz ve öğrencinin tüm ödev geçmişi de silinir.");
       
@@ -197,7 +220,22 @@ export default function OgrencilerPage() {
                       </Link>
                     </td>
                     <td className="py-3 text-ink-600">
-                      {s.classes?.class_name || "—"}
+                      <select
+                        value={s.class_id || ""}
+                        onChange={(e) => sinifDegistir(s.id, e.target.value)}
+                        className={
+                          "h-8 max-w-[12rem] rounded-md border bg-white px-2 text-sm " +
+                          (s.class_id ? "border-ink-200 text-ink-700" : "border-pending-500 text-pending-700")
+                        }
+                      >
+                        <option value="">Sınıfsız</option>
+                        {classes.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.class_name}
+                          </option>
+                        ))}
+                        <option value="__yeni">➕ Yeni sınıf oluştur…</option>
+                      </select>
                     </td>
                     <td className="py-3">
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-progress-100 px-2.5 py-1 text-xs font-medium text-progress-700"><span className="h-1.5 w-1.5 rounded-full bg-progress-500" />
