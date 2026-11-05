@@ -88,3 +88,29 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   return NextResponse.json({ ok: true, className: r.className, created: r.created });
 }
+
+// Öğrenciyi listeden kaldırır (yumuşak silme): deleted_at yazılır, geçmiş kayıtlar saklanır.
+export async function DELETE(
+  _request: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+
+  const { data: student } = await supabaseAdmin
+    .from("students")
+    .select("id")
+    .eq("id", params.id)
+    .eq("coach_id", session.coachId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!student) return NextResponse.json({ error: "Öğrenci bulunamadı" }, { status: 404 });
+
+  const { error } = await supabaseAdmin
+    .from("students")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", params.id)
+    .eq("coach_id", session.coachId);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
