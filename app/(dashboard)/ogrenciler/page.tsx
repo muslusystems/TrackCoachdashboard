@@ -75,7 +75,7 @@ export default function OgrencilerPage() {
   }
 
   const ogrenciSil = async (studentId: string) => {
-      const onay = window.confirm("⚠️ Bu öğrenciyi silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz ve öğrencinin tüm ödev geçmişi de silinir.");
+      const onay = window.confirm("⚠️ Bu öğrenciyi silmek istediğinize emin misiniz?\n\nÖğrenci listeden kaldırılır; geçmiş ödev ve teslim kayıtları saklanır.");
       
       if (onay) {
           try {
