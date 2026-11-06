@@ -23,7 +23,7 @@ export async function GET(
 
   const { data: assignedRaw, error: assignedError } = await supabaseAdmin
     .from("student_assignments")
-    .select("id, status, created_at, class_id, assignments(id, title, due_date, drive_pdf_url, lesson_id, topic_id)")
+    .select("id, status, created_at, class_id, assignments(id, title, due_date, drive_pdf_url, lesson_id, topic_id, deleted_at)")
     .eq("student_id", params.id)
     .order("created_at", { ascending: false });
 
@@ -41,7 +41,11 @@ export async function GET(
   }
 
   // Ders ve konu adlarını ödevlere ekle
-  const assigned: any[] = assignedRaw || [];
+  // Silinen ödev, öğrenci teslim etmediyse (bekliyorsa) öğrenci sayfasından da kalkar;
+  // teslim edilmiş olanlar geçmiş olarak kalır.
+  const assigned: any[] = (assignedRaw || []).filter(
+    (a: any) => !(a.assignments?.deleted_at && a.status === "pending")
+  );
   const lessonIds = Array.from(new Set(assigned.map((a) => a.assignments?.lesson_id).filter(Boolean)));
   const topicIds = Array.from(new Set(assigned.map((a) => a.assignments?.topic_id).filter(Boolean)));
   const lessonName = new Map<string, string>();
