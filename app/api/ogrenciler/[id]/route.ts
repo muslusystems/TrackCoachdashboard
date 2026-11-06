@@ -23,7 +23,7 @@ export async function GET(
 
   const { data: assignedRaw, error: assignedError } = await supabaseAdmin
     .from("student_assignments")
-    .select("id, status, created_at, assignments(id, title, due_date, drive_pdf_url, lesson_id, topic_id)")
+    .select("id, status, created_at, class_id, assignments(id, title, due_date, drive_pdf_url, lesson_id, topic_id)")
     .eq("student_id", params.id)
     .order("created_at", { ascending: false });
 
@@ -54,10 +54,18 @@ export async function GET(
     const { data } = await supabaseAdmin.from("topics").select("id, name").in("id", topicIds);
     (data || []).forEach((t: any) => topicName.set(t.id, t.name));
   }
+  // Atama anındaki sınıf adları
+  const classIds = Array.from(new Set(assigned.map((a) => a.class_id).filter(Boolean)));
+  const className = new Map<string, string>();
+  if (classIds.length) {
+    const { data } = await supabaseAdmin.from("classes").select("id, class_name").in("id", classIds);
+    (data || []).forEach((c: any) => className.set(c.id, c.class_name));
+  }
   const assignedWithNames = assigned.map((a) =>
     a.assignments
       ? {
           ...a,
+          class_name: a.class_id ? className.get(a.class_id) || null : null,
           assignments: {
             ...a.assignments,
             lesson_name: lessonName.get(a.assignments.lesson_id) || null,
