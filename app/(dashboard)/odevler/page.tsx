@@ -38,6 +38,7 @@ type Assignment = {
     id: string;
     status: string;
     student_id: string;
+    class_id?: string | null;
     students: { name_surname: string; class_id?: string | null } | null;
   }[];
 };
@@ -97,12 +98,13 @@ export default function OdevlerPage() {
     a.lesson_id && lessonIds.has(a.lesson_id) ? a.lesson_id : NONE;
   const topicOf = (a: Assignment) =>
     a.topic_id && topicIds.has(a.topic_id) ? a.topic_id : NONE;
-  // Ödevin sınıfları: atandığı öğrencilerin sınıfları (sınıfsızsa NONE). Birden çok sınıf olabilir.
+  // Ödevin sınıfları: atama anında öğrencilerin bulunduğu sınıflar (sınıfsızsa NONE). Birden çok sınıf olabilir.
+  // Öğrenci sonradan sınıf değiştirse de ödev atandığı sınıfta kalır.
   const classIds = new Set(classes.map((c) => c.id));
   const classesOf = (a: Assignment): string[] => {
     const set = new Set<string>();
     (a.student_assignments || []).forEach((x) => {
-      const cid = x.students?.class_id;
+      const cid = x.class_id;
       if (cid && classIds.has(cid)) set.add(cid);
     });
     return set.size ? Array.from(set) : [NONE];
