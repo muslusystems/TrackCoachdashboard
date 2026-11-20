@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Users, GraduationCap, FileUp, FileText, BellRing } from "lucide-react";
+import { Users, GraduationCap, FileUp, FileText, BellRing, ShieldCheck } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/uyarilar", label: "Dikkat Panosu", icon: BellRing },
@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   { href: "/odevler", label: "Ödevler", icon: FileText },
 ];
 
-export function SidebarNav({ alertCount = 0 }: { alertCount?: number }) {
+export function SidebarNav({ alertCount = 0, isAdmin = false }: { alertCount?: number; isAdmin?: boolean }) {
   const pathname = usePathname();
   const [count, setCount] = useState(alertCount);
   // Dikkat Panosu açılınca rozet kaybolur
@@ -25,7 +25,7 @@ export function SidebarNav({ alertCount = 0 }: { alertCount?: number }) {
   }, [alertCount]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <nav className="flex flex-1 flex-col gap-1">
-      {NAV_ITEMS.map((item) => {
+      {(isAdmin ? [...NAV_ITEMS, { href: "/yonetici", label: "Yönetici", icon: ShieldCheck }] : NAV_ITEMS).map((item) => {
         const active = pathname === item.href || pathname.startsWith(item.href + "/");
         return (
           <Link
