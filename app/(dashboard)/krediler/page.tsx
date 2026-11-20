@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Wallet } from "lucide-react";
+import { ExternalLink, Wallet } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,13 @@ type HistoryRow = {
   can_revert: boolean;
   created_at: string;
 };
+
+const SHOP_LINKS = [
+  { months: 1, url: "https://www.shopier.com/BultenAI/53184830" },
+  { months: 3, url: "https://www.shopier.com/BultenAI/53184979" },
+  { months: 6, url: "https://www.shopier.com/BultenAI/53185092" },
+  { months: 10, url: "https://www.shopier.com/BultenAI/53185155" },
+];
 
 const selectCls = "flex h-10 w-full rounded-md border border-ink-200 bg-white px-3 text-sm";
 
@@ -114,6 +121,34 @@ export default function KredilerPage() {
 
       {error && <p className="mb-4 text-sm text-pending-700">{error}</p>}
       {msg && <p className="mb-4 text-sm text-progress-700">{msg}</p>}
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Kredi satın al</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-3 text-sm text-ink-600">
+            Süreyi seç, açılan sayfada soru kotasını (200 / 400 / 600 soru/gün) seçerek öğrenci başına
+            kredi al. Ödemeyi aynı e-posta adresinle yapman, kredinin hesabına doğru yansıması için önemli.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {SHOP_LINKS.map((l) => (
+              <a
+                key={l.months}
+                href={l.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-ink-200 bg-white px-4 py-2 text-sm font-medium text-signal-600 transition-colors hover:bg-signal-50"
+              >
+                {l.months} aylık <ExternalLink size={14} />
+              </a>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-ink-400">
+            Ödeme sonrası kredi şimdilik yönetici tarafından hesabına tanımlanır; otomatik aktarım yakında eklenecek.
+          </p>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
