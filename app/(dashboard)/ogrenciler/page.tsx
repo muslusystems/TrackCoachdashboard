@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Users } from "lucide-react";
+import { Copy, Check, Plus, Users } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { avatarStyle, initials } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -31,10 +30,27 @@ export default function OgrencilerPage() {
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [classId, setClassId] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState("");
+  const [inviteLink, setInviteLink] = useState("");
+  const [copied, setCopied] = useState<"" | "link" | "msg">("");
+
+  useEffect(() => {
+    fetch("/api/davet-linki")
+      .then((r) => r.json())
+      .then((j) => setInviteLink(j.link || ""))
+      .catch(() => {});
+  }, []);
+
+  const inviteMessage = `Merhaba! Ödev takibi için Telegram botuna bu linkten giriş yap: ${inviteLink}\n\nLinke tıkla, "Başlat"a bas ve adını soyadını yaz.`;
+
+  async function kopyala(text: string, which: "link" | "msg") {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(which);
+      setTimeout(() => setCopied(""), 2000);
+    } catch {
+      window.prompt("Kopyala:", text);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -95,29 +111,6 @@ export default function OgrencilerPage() {
       }
   };
   
-  async function handleAdd() {
-    setFormError("");
-    if (!name.trim()) {
-      setFormError("Öğrenci adını gir");
-      return;
-    }
-    setSaving(true);
-    const res = await fetch("/api/ogrenciler", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name_surname: name, class_id: classId || null }),
-    });
-    setSaving(false);
-    if (!res.ok) {
-      setFormError("Kaydedilemedi, tekrar dene.");
-      return;
-    }
-    setName("");
-    setClassId("");
-    setOpen(false);
-    load();
-  }
-
   return (
     <div>
       <PageHeader
@@ -133,41 +126,33 @@ export default function OgrencilerPage() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Yeni öğrenci ekle</DialogTitle>
+              <DialogTitle>Öğrenci nasıl eklenir?</DialogTitle>
             </DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-ink-600">
-                  Ad soyad
-                </label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="örn. Özlem Uslu"
-                />
+            <div className="space-y-3 text-sm text-ink-600">
+              <p>
+                Öğrenciler Telegram üzerinden senin davet linkinle kayıt olur.
+                Aşağıdaki mesajı öğrencine gönder; öğrenci linke tıklayıp
+                adını yazınca listende görünür.
+              </p>
+              <div className="break-all rounded-md border border-ink-200 bg-ink-50 p-3 text-xs text-ink-900">
+                {inviteLink || "Yükleniyor…"}
               </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-ink-600">
-                  Sınıf (opsiyonel)
-                </label>
-                <select
-                  value={classId}
-                  onChange={(e) => setClassId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-ink-200 bg-white px-3 text-sm"
-                >
-                  <option value="">Sınıfsız</option>
-                  {classes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.class_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {formError && (
-                <p className="text-sm text-pending-700">{formError}</p>
-              )}
-              <Button onClick={handleAdd} disabled={saving} className="w-full">
-                {saving ? "Kaydediliyor…" : "Kaydet"}
+              <Button
+                variant="secondary"
+                className="w-full"
+                disabled={!inviteLink}
+                onClick={() => kopyala(inviteLink, "link")}
+              >
+                {copied === "link" ? <Check size={16} /> : <Copy size={16} />}{" "}
+                {copied === "link" ? "Kopyalandı" : "Linki kopyala"}
+              </Button>
+              <Button
+                className="w-full"
+                disabled={!inviteLink}
+                onClick={() => kopyala(inviteMessage, "msg")}
+              >
+                {copied === "msg" ? <Check size={16} /> : <Copy size={16} />}{" "}
+                {copied === "msg" ? "Kopyalandı" : "Öğrenciye gönderilecek mesajı kopyala"}
               </Button>
             </div>
           </DialogContent>
@@ -184,8 +169,8 @@ export default function OgrencilerPage() {
             <p className="text-sm text-ink-400">Yükleniyor…</p>
           ) : students.length === 0 ? (
             <p className="text-sm text-ink-400">
-              Henüz öğrencin yok. &quot;Öğrenci ekle&quot; ile başla, ya da admin
-              bottan davet linki gönder.
+              Henüz öğrencin yok. &quot;Öğrenci ekle&quot; butonuna basıp Telegram davet
+              linkini öğrencine gönder.
             </p>
           ) : (
             <table className="w-full text-sm">
