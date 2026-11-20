@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Users, GraduationCap, FileUp, FileText, BellRing, ShieldCheck } from "lucide-react";
+import { Users, GraduationCap, FileUp, FileText, BellRing, ShieldCheck, Wallet } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/uyarilar", label: "Dikkat Panosu", icon: BellRing },
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/siniflar", label: "Sınıflar", icon: GraduationCap },
   { href: "/odev-ata", label: "Ödev Ata", icon: FileUp },
   { href: "/odevler", label: "Ödevler", icon: FileText },
+  { href: "/krediler", label: "Krediler", icon: Wallet },
 ];
 
 export function SidebarNav({ alertCount = 0, isAdmin = false }: { alertCount?: number; isAdmin?: boolean }) {
