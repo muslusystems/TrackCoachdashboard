@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 import { computeAlerts } from "@/lib/alerts";
 import { SEEN_COOKIE } from "@/lib/alertSeen";
 import { PushToggle } from "@/components/PushToggle";
+import { isAdminCoach } from "@/lib/admin";
 
 export default async function DashboardLayout({
   children,
@@ -26,6 +27,8 @@ export default async function DashboardLayout({
     alertCount = 0;
   }
 
+  const isAdmin = await isAdminCoach(session.coachId).catch(() => false);
+
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <aside className="flex w-full shrink-0 flex-col bg-gradient-to-b from-night-900 via-night-800 to-night-700 px-4 py-5 md:sticky md:top-0 md:h-screen md:w-64 md:py-7">
@@ -40,7 +43,7 @@ export default async function DashboardLayout({
             <p className="text-xs text-signal-200">Koç paneli</p>
           </div>
         </div>
-        <SidebarNav alertCount={alertCount} />
+        <SidebarNav alertCount={alertCount} isAdmin={isAdmin} />
         <PushToggle />
         <div className="mt-5 flex items-center gap-3 rounded-xl bg-white/[0.08] p-3 md:mt-6">
           <span
